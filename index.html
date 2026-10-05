@@ -2392,6 +2392,18 @@ Tópico: Recursos Cíveis"></textarea>
           </div>
         </div>
 
+        <!-- 8. Diagnóstico de Dados e Armazenamento -->
+        <div style="margin-bottom: 1.25rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <strong style="font-size:0.85rem; display:block;">Diagnóstico de Armazenamento</strong>
+              <span class="muted" style="font-size:0.75rem;">Verifique o funcionamento do localStorage e a contagem de registros salvos</span>
+            </div>
+            <button class="btn btn-sm" type="button" id="btn-run-diagnostics">Diagnóstico de dados</button>
+          </div>
+          <div id="diagnostics-result" style="display:none; margin-top:0.6rem; padding:0.65rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); font-size:0.8rem; line-height:1.45;"></div>
+        </div>
+
         <div class="flex justify-end gap-2">
           <button type="button" class="btn btn-primary" id="btn-save-preferences">
             Salvar preferências
@@ -2610,15 +2622,148 @@ Tópico: Recursos Cíveis"></textarea>
       };
     }
 
+    // Chaves de armazenamento
+    const STORAGE_KEY = 'organizador_estudos_dados_v1';
+    const PREFS_KEY = 'organizador_estudos_prefs_v1';
+    const LEGACY_STORAGE_KEYS = [
+      'organizador_estudos_dados',
+      'study_organizer_data',
+      'organizador_estudos',
+      'study_app_data',
+      'organizador_dados',
+      'estudos_app_data'
+    ];
+
     // Gerenciador de Estado com suporte completo a preferências TDAH e Retomada sem Recomeço
     class StudyApp {
       constructor() {
-        this.data = this.loadData();
-        this.prefs = this.loadPreferences();
         this.currentTip = 0;
         this.currentFilterError = 'all';
         this.focusTimerInterval = null;
         this.focusTimerRemaining = 25 * 60;
+        this.currentParsedItems = [];
+
+        // 1. Fonte Única de Verdade: Carregamento com migração de versões antigas
+        this.load();
+      }
+
+      // Migração de chaves antigas para a chave atual
+      migrateLegacyData() {
+        try {
+          const currentRaw = localStorage.getItem(STORAGE_KEY);
+          let currentData = null;
+          if (currentRaw) {
+            try {
+              currentData = JSON.parse(currentRaw);
+            } catch (e) {}
+          }
+
+          let migratedAny = false;
+
+          for (const oldKey of LEGACY_STORAGE_KEYS) {
+            try {
+              const oldRaw = localStorage.getItem(oldKey);
+              if (!oldRaw) continue;
+              const oldObj = JSON.parse(oldRaw);
+              if (oldObj && typeof oldObj === 'object') {
+                if (!currentData) {
+                  currentData = oldObj;
+                  migratedAny = true;
+                } else {
+                  // Mescla matérias antigas que não existem na chave atual
+                  if (Array.isArray(oldObj.subjects)) {
+                    if (!currentData.subjects) currentData.subjects = [];
+                    oldObj.subjects.forEach(oldSub => {
+                      if (oldSub && oldSub.name) {
+                        const exists = currentData.subjects.some(
+                          s => s.id === oldSub.id || (s.name && s.name.trim().toLowerCase() === oldSub.name.trim().toLowerCase())
+                        );
+                        if (!exists) {
+                          currentData.subjects.push(oldSub);
+                          migratedAny = true;
+                        }
+                      }
+                    });
+                  }
+                  // Mescla sessões antigas
+                  if (Array.isArray(oldObj.sessions)) {
+                    if (!currentData.sessions) currentData.sessions = [];
+                    oldObj.sessions.forEach(s => {
+                      if (s && !currentData.sessions.some(curr => curr.id === s.id)) {
+                        currentData.sessions.push(s);
+                        migratedAny = true;
+                      }
+                    });
+                  }
+                  // Mescla erros
+                  if (Array.isArray(oldObj.errors)) {
+                    if (!currentData.errors) currentData.errors = [];
+                    oldObj.errors.forEach(e => {
+                      if (e && !currentData.errors.some(curr => curr.id === e.id)) {
+                        currentData.errors.push(e);
+                        migratedAny = true;
+                      }
+                    });
+                  }
+                  // Mescla revisões
+                  if (Array.isArray(oldObj.reviews)) {
+                    if (!currentData.reviews) currentData.reviews = [];
+                    oldObj.reviews.forEach(r => {
+                      if (r && !currentData.reviews.some(curr => curr.id === r.id)) {
+                        currentData.reviews.push(r);
+                        migratedAny = true;
+                      }
+                    });
+                  }
+                }
+                // Limpa chave antiga para evitar leitura errônea
+                localStorage.removeItem(oldKey);
+              }
+            } catch (err) {
+              console.warn('Erro ao processar chave legada ' + oldKey, err);
+            }
+          }
+
+          if (migratedAny && currentData) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+          }
+        } catch (err) {
+          console.error('Falha na verificação de dados legados:', err);
+        }
+      }
+
+      // FONTE ÚNICA DE VERDADE: load() centralizado
+      load() {
+        this.migrateLegacyData();
+
+        // Carrega dados principais
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed.subjects)) parsed.subjects = [];
+            if (!Array.isArray(parsed.schedule)) parsed.schedule = [];
+            if (!Array.isArray(parsed.sessions)) parsed.sessions = [];
+            if (!Array.isArray(parsed.errors)) parsed.errors = [];
+            if (!Array.isArray(parsed.reviews)) parsed.reviews = [];
+            if (!Array.isArray(parsed.aiQuestions)) parsed.aiQuestions = [];
+            if (!Array.isArray(parsed.ideas)) parsed.ideas = [];
+            if (!Array.isArray(parsed.captureHistory)) parsed.captureHistory = [];
+            if (!parsed.resumedState) parsed.resumedState = null;
+            if (!parsed.dailyLog) parsed.dailyLog = { reviews: 0, studyMinutes: 0, questions: 0 };
+            this.data = parsed;
+          } else {
+            const initial = getDefaultData();
+            this.data = initial;
+            this.save();
+          }
+        } catch (e) {
+          console.error("Falha ao ler dados do localStorage:", e);
+          this.data = getDefaultData();
+        }
+
+        // Carrega preferências
+        this.prefs = this.loadPreferences();
       }
 
       loadPreferences() {
@@ -2634,19 +2779,44 @@ Tópico: Recursos Cíveis"></textarea>
           hiddenTabs: []
         };
         try {
-          const raw = localStorage.getItem('organizador_estudos_prefs_v1');
+          const raw = localStorage.getItem(PREFS_KEY);
           if (raw) return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
         } catch (e) {
-          console.error('Falha ao ler preferências', e);
+          console.error('Falha ao ler preferências:', e);
         }
         return DEFAULT_PREFS;
       }
 
+      // SALVAMENTO VERIFICÁVEL: save() com tratamento de erros visível
+      save() {
+        try {
+          const serialized = JSON.stringify(this.data);
+          localStorage.setItem(STORAGE_KEY, serialized);
+          return true;
+        } catch (e) {
+          console.error("Falha crítica ao gravar no localStorage:", e);
+          this.toast("Não foi possível salvar. Seus dados podem não persistir.");
+          return false;
+        }
+      }
+
+      // Atalho de compatibilidade
+      saveData(state) {
+        if (state) this.data = state;
+        return this.save();
+      }
+
+      // Atalho de compatibilidade
+      loadData() {
+        return this.data;
+      }
+
       savePreferences() {
         try {
-          localStorage.setItem('organizador_estudos_prefs_v1', JSON.stringify(this.prefs));
+          localStorage.setItem(PREFS_KEY, JSON.stringify(this.prefs));
         } catch (e) {
-          console.error('Falha ao gravar preferências', e);
+          console.error('Falha ao gravar preferências:', e);
+          this.toast("Não foi possível salvar suas preferências.");
         }
         this.applyPreferences();
       }
@@ -2676,40 +2846,6 @@ Tópico: Recursos Cíveis"></textarea>
             btn.style.display = 'inline-flex';
           }
         });
-      }
-
-      loadData() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (!parsed.aiQuestions) parsed.aiQuestions = [];
-            if (!parsed.ideas) parsed.ideas = [];
-            if (!parsed.captureHistory) parsed.captureHistory = [];
-            if (!parsed.resumedState) parsed.resumedState = null;
-            if (!parsed.dailyLog) parsed.dailyLog = { reviews: 0, studyMinutes: 0, questions: 0 };
-            return parsed;
-          }
-        } catch (e) {
-          console.error("Falha ao ler localStorage", e);
-        }
-        const initial = getDefaultData();
-        if (!initial.aiQuestions) initial.aiQuestions = [];
-        if (!initial.ideas) initial.ideas = [];
-        if (!initial.captureHistory) initial.captureHistory = [];
-        initial.resumedState = null;
-        initial.dailyLog = { reviews: 2, studyMinutes: 30, questions: 5 };
-        this.saveData(initial);
-        return initial;
-      }
-
-      saveData(state) {
-        if (state) this.data = state;
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-        } catch (e) {
-          console.error("Falha ao salvar localStorage", e);
-        }
       }
 
       toast(msg) {
@@ -2771,6 +2907,9 @@ Tópico: Recursos Cíveis"></textarea>
         });
         document.getElementById('btn-close-preferences')?.addEventListener('click', () => {
           this.closeModal('modal-preferences');
+        });
+        document.getElementById('btn-run-diagnostics')?.addEventListener('click', () => {
+          this.runDiagnostics();
         });
         document.getElementById('btn-save-preferences')?.addEventListener('click', () => {
           this.savePreferencesFromModal();
@@ -3260,6 +3399,55 @@ Tópico: Recursos Cíveis"></textarea>
         this.toast('Preferências atualizadas com sucesso!');
       }
 
+      // DIAGNÓSTICO VISÍVEL: teste real do localStorage e contagem dos dados salvos
+      runDiagnostics() {
+        const resultBox = document.getElementById('diagnostics-result');
+        if (!resultBox) return;
+
+        let storageOk = false;
+        let testError = null;
+        try {
+          const testKey = '__diag_test_' + Date.now();
+          localStorage.setItem(testKey, 'ok');
+          const readVal = localStorage.getItem(testKey);
+          localStorage.removeItem(testKey);
+          storageOk = (readVal === 'ok');
+        } catch (e) {
+          testError = e.message || String(e);
+        }
+
+        let rawBytes = 0;
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) rawBytes = new Blob([raw]).size;
+        } catch (e) {}
+
+        const subs = this.data.subjects || [];
+        const sess = this.data.sessions || [];
+        const errs = this.data.errors || [];
+        const revs = this.data.reviews || [];
+        const sch = this.data.schedule || [];
+        const ai = this.data.aiQuestions || [];
+
+        resultBox.style.display = 'block';
+        resultBox.innerHTML = `
+          <div style="margin-bottom:4px;">
+            <strong>Status do localStorage:</strong> 
+            ${storageOk 
+              ? '<span style="color:#16a34a; font-weight:700;">✓ Funcionando normalmente</span>' 
+              : `<span style="color:#dc2626; font-weight:700;">✗ Falha de persistência (${testError || 'bloqueado'})</span>`
+            }
+          </div>
+          <div><strong>Chave ativa:</strong> <code>${STORAGE_KEY}</code> (~${Math.round(rawBytes / 1024 * 10) / 10} KB)</div>
+          <div><strong>Matérias salvas:</strong> ${subs.length} ${subs.length > 0 ? `(${subs.map(s => s.name).join(', ')})` : '<em>(nenhuma matéria cadastrada)</em>'}</div>
+          <div><strong>Sessões de estudo:</strong> ${sess.length}</div>
+          <div><strong>Pontos no Caderno de erros:</strong> ${errs.length}</div>
+          <div><strong>Fichas de Revisão Espaçada:</strong> ${revs.length}</div>
+          <div><strong>Blocos no Cronograma:</strong> ${sch.length}</div>
+          <div><strong>Questões da Adapta ONE:</strong> ${ai.length}</div>
+        `;
+      }
+
       openModal(id) {
         this.populateSubjectSelects();
         const m = document.getElementById(id);
@@ -3356,22 +3544,86 @@ Tópico: Recursos Cíveis"></textarea>
         };
       }
 
+      // RE-RENDERIZAÇÃO GLOBAL: atualiza todas as telas e dropdowns sem depender de reabertura de aba
       renderAll() {
-        this.renderTip();
-        this.renderDashboard();
-        this.renderSubjects();
-        this.renderSchedule();
-        this.renderSessions();
-        this.renderErrors();
-        this.renderReviews();
-        this.renderAiExercises();
-        this.renderCaptureIdeas();
-        this.renderCaptureHistory();
-        this.populateSubjectSelects();
+        try {
+          this.populateSubjectSelects();
+        } catch (e) {
+          console.error('Erro ao atualizar dropdowns de matérias:', e);
+        }
+
+        try {
+          this.renderTip();
+        } catch (e) {
+          console.error('Erro ao renderizar carrossel de dicas:', e);
+        }
+
+        try {
+          this.renderDashboard();
+        } catch (e) {
+          console.error('Erro ao renderizar painel (dashboard):', e);
+        }
+
+        try {
+          this.renderSubjects();
+        } catch (e) {
+          console.error('Erro ao renderizar lista de matérias:', e);
+        }
+
+        try {
+          this.renderSchedule();
+        } catch (e) {
+          console.error('Erro ao renderizar cronograma:', e);
+        }
+
+        try {
+          this.renderSessions();
+        } catch (e) {
+          console.error('Erro ao renderizar sessões:', e);
+        }
+
+        try {
+          this.renderErrors();
+        } catch (e) {
+          console.error('Erro ao renderizar caderno de erros:', e);
+        }
+
+        try {
+          this.renderReviews();
+        } catch (e) {
+          console.error('Erro ao renderizar revisões espaçadas:', e);
+        }
+
+        try {
+          this.renderAiExercises();
+        } catch (e) {
+          console.error('Erro ao renderizar exercícios IA:', e);
+        }
+
+        try {
+          this.renderCaptureIdeas();
+        } catch (e) {
+          console.error('Erro ao renderizar ideias:', e);
+        }
+
+        try {
+          this.renderCaptureHistory();
+        } catch (e) {
+          console.error('Erro ao renderizar histórico de captura:', e);
+        }
+
+        // Se houver itens de captura em conferência, atualiza as opções de matérias deles
+        try {
+          if (this.currentParsedItems && this.currentParsedItems.length > 0) {
+            this.renderCapturePreview();
+          }
+        } catch (e) {
+          console.error('Erro ao atualizar preview de captura:', e);
+        }
       }
 
       populateSubjectSelects() {
-        const subjects = this.data.subjects;
+        const subjects = this.data.subjects || [];
         const selects = ['sess-subject', 'err-subject', 'rev-subject', 'ai-subject-select'];
 
         selects.forEach(selId => {
@@ -3389,12 +3641,17 @@ Tópico: Recursos Cíveis"></textarea>
             opt.textContent = s.name;
             el.appendChild(opt);
           });
-          if (curr && subjects.some(s => s.id === curr)) el.value = curr;
+          if (curr && subjects.some(s => s.id === curr)) {
+            el.value = curr;
+          } else if (subjects.length > 0) {
+            el.value = subjects[0].id;
+          }
         });
 
         // Select do cronograma (inclui Set Misto)
         const schSel = document.getElementById('sch-subject');
         if (schSel) {
+          const curr = schSel.value;
           schSel.innerHTML = '<option value="__SET_MISTO__">🔀 Set Misto (Intercalamento de temas)</option>';
           subjects.forEach(s => {
             const opt = document.createElement('option');
@@ -3402,6 +3659,9 @@ Tópico: Recursos Cíveis"></textarea>
             opt.textContent = s.name;
             schSel.appendChild(opt);
           });
+          if (curr && (curr === '__SET_MISTO__' || subjects.some(s => s.id === curr))) {
+            schSel.value = curr;
+          }
         }
 
         // Filtro de matérias na aba Exercícios IA
@@ -3539,14 +3799,17 @@ Tópico: Recursos Cíveis"></textarea>
         const descEl = document.getElementById('focus-desc');
         const btnQuick = document.getElementById('btn-quick-session');
 
+        // Se estes elementos não estiverem no DOM atual, sai em segurança sem quebrar a execução
+        if (!titleEl && !descEl && !btnQuick) return;
+
         if (this.data.subjects.length === 0) {
-          titleEl.innerText = 'Cadastre sua primeira matéria';
-          descEl.innerText = 'Adicione as matérias da sua grade universitária para o algoritmo identificar lacunas de estudo.';
-          btnQuick.style.display = 'none';
+          if (titleEl) titleEl.innerText = 'Cadastre sua primeira matéria';
+          if (descEl) descEl.innerText = 'Adicione as matérias da sua grade universitária para o algoritmo identificar lacunas de estudo.';
+          if (btnQuick) btnQuick.style.display = 'none';
           return;
         }
 
-        btnQuick.style.display = 'inline-block';
+        if (btnQuick) btnQuick.style.display = 'inline-block';
 
         // Identifica matéria com maior número de erros de alta confiança pendentes ou maior gap de superestimação
         let worstSubject = null;
@@ -3578,16 +3841,18 @@ Tópico: Recursos Cíveis"></textarea>
         });
 
         if (worstSubject) {
-          titleEl.innerText = `${worstSubject.name}`;
-          descEl.innerText = reasonText;
-          btnQuick.onclick = () => {
-            this.openModal('modal-session');
-            const sel = document.getElementById('sess-subject');
-            if (sel) sel.value = worstSubject.id;
-          };
+          if (titleEl) titleEl.innerText = `${worstSubject.name}`;
+          if (descEl) descEl.innerText = reasonText;
+          if (btnQuick) {
+            btnQuick.onclick = () => {
+              this.openModal('modal-session');
+              const sel = document.getElementById('sess-subject');
+              if (sel) sel.value = worstSubject.id;
+            };
+          }
         } else {
-          titleEl.innerText = 'Tudo em equilíbrio';
-          descEl.innerText = 'Suas matérias estão na zona ótima. Mantenha os testes e revisões periódicas!';
+          if (titleEl) titleEl.innerText = 'Tudo em equilíbrio';
+          if (descEl) descEl.innerText = 'Suas matérias estão na zona ótima. Mantenha os testes e revisões periódicas!';
         }
       }
 
@@ -3661,27 +3926,88 @@ Tópico: Recursos Cíveis"></textarea>
         });
       }
 
+      // CADASTRO DE MATÉRIA ROBUSTO: validação, confirmação de salvamento e re-renderização imediata
       handleSaveSubject(e) {
         e.preventDefault();
-        const name = document.getElementById('sub-name').value.trim();
-        const prof = document.getElementById('sub-prof').value.trim();
-        const color = document.getElementById('sub-color').value;
+        try {
+          const nameInput = document.getElementById('sub-name');
+          const profInput = document.getElementById('sub-prof');
+          const colorInput = document.getElementById('sub-color');
 
-        if (!name) return;
+          const name = nameInput ? nameInput.value.trim() : '';
+          const prof = profInput ? profInput.value.trim() : '';
+          const color = colorInput ? (colorInput.value.trim() || '#4f46e5') : '#4f46e5';
 
-        const newSub = {
-          id: 'sub-' + Date.now(),
-          name,
-          professor: prof,
-          color: color || '#4f46e5'
-        };
+          // Validação 1: Nome não vazio
+          if (!name) {
+            this.toast('Por favor, informe o nome da matéria.');
+            if (nameInput) nameInput.focus();
+            return;
+          }
 
-        this.data.subjects.push(newSub);
-        this.saveData();
-        this.closeModal('modal-subject');
-        e.target.reset();
-        this.renderAll();
-        this.toast(`Matéria "${name}" cadastrada com sucesso!`);
+          // Validação 2: Sem duplicata exata (mesmo nome em minúsculas)
+          if (!this.data.subjects) this.data.subjects = [];
+          const lowerName = name.toLowerCase();
+          const isDuplicate = this.data.subjects.some(
+            s => s.name && s.name.trim().toLowerCase() === lowerName
+          );
+
+          if (isDuplicate) {
+            this.toast(`A matéria "${name}" já está cadastrada.`);
+            if (nameInput) nameInput.focus();
+            return;
+          }
+
+          // Validação 3: Cor atribuída (com fallback garantido)
+          const assignedColor = color || '#4f46e5';
+
+          const newSub = {
+            id: 'sub-' + Date.now(),
+            name,
+            professor: prof,
+            color: assignedColor
+          };
+
+          // Adiciona ao estado único em memória
+          this.data.subjects.push(newSub);
+
+          // Salva no localStorage com try/catch
+          const savedOk = this.save();
+          if (!savedOk) {
+            this.toast("Não foi possível salvar. Seus dados podem não persistir.");
+            return;
+          }
+
+          // Confirmação verificável antes de comemorar
+          let isPersisted = false;
+          try {
+            const checkRaw = localStorage.getItem(STORAGE_KEY);
+            if (checkRaw) {
+              const checkData = JSON.parse(checkRaw);
+              isPersisted = Array.isArray(checkData.subjects) && checkData.subjects.some(s => s.id === newSub.id);
+            }
+          } catch (verifErr) {
+            console.warn('Verificação de persistência falhou:', verifErr);
+          }
+
+          if (!isPersisted) {
+            this.toast("Não foi possível salvar. Seus dados podem não persistir.");
+          }
+
+          // Fecha modal e limpa formulário
+          this.closeModal('modal-subject');
+          if (nameInput) nameInput.value = '';
+          if (profInput) profInput.value = '';
+
+          // Re-renderização global completa e imediata
+          this.renderAll();
+
+          // Toast de sucesso exato
+          this.toast("Matéria cadastrada");
+        } catch (err) {
+          console.error("Erro ao cadastrar matéria:", err);
+          this.toast("Ocorreu um erro ao salvar a matéria. Tente novamente.");
+        }
       }
 
       deleteSubject(id) {
@@ -4393,7 +4719,7 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         }
 
         this.toast(`${result.questions.length} questão(ões) importada(s)!`);
-        this.renderAiExercises();
+        this.renderAll();
       }
 
       parseAiQuestions(text, defaultSubjectId) {
@@ -4765,7 +5091,7 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         if (!this.data.aiQuestions) return;
         this.data.aiQuestions = this.data.aiQuestions.filter(q => q.id !== qId);
         this.saveData();
-        this.renderAiExercises();
+        this.renderAll();
         this.toast('Questão removida.');
       }
 
@@ -4774,7 +5100,7 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         if (!this.data.aiQuestions) return;
         this.data.aiQuestions = this.data.aiQuestions.filter(q => q.status !== 'pending');
         this.saveData();
-        this.renderAiExercises();
+        this.renderAll();
         this.toast('Questões pendentes limpas.');
       }
 
@@ -5366,7 +5692,7 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         if (!confirm('Deseja descartar esta ideia?')) return;
         this.data.ideas = (this.data.ideas || []).filter(i => i.id !== ideaId);
         this.saveData();
-        this.renderCaptureIdeas();
+        this.renderAll();
         this.toast('Ideia descartada.');
       }
 
