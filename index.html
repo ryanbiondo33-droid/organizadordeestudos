@@ -1314,33 +1314,35 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
         <div class="flex justify-between items-center gap-2 flex-wrap" style="border-top: 1px dashed var(--border); padding-top: 0.75rem;">
           <span class="muted" style="font-size: 0.8rem;">
-            Atalho: pressione <kbd style="background:var(--bg); border:1px solid var(--border); padding:2px 5px; border-radius:3px;">Ctrl</kbd> + <kbd style="background:var(--bg); border:1px solid var(--border); padding:2px 5px; border-radius:3px;">Enter</kbd> para organizar.
+            Atalho: pressione <kbd style="background:var(--bg); border:1px solid var(--border); padding:2px 5px; border-radius:3px;">Ctrl</kbd> + <kbd style="background:var(--bg); border:1px solid var(--border); padding:2px 5px; border-radius:3px;">Enter</kbd> para organizar e salvar.
           </span>
           <div class="flex gap-2">
             <button class="btn btn-sm" id="btn-clear-capture" type="button">Limpar campo</button>
-            <button class="btn btn-primary" id="btn-parse-capture" type="button">⚡ Organizar</button>
+            <button class="btn btn-primary" id="btn-parse-capture" type="button">⚡ Salvar e Organizar</button>
           </div>
         </div>
       </div>
 
-      <!-- Seção de Pré-Visualização e Confirmação -->
+      <!-- Aviso Visível de Falha de Salvamento (se houver erro) -->
+      <div id="capture-inline-error" style="display: none; margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: var(--radius); color: #991b1b; font-size: 0.875rem;" role="alert">
+        ⚠️ Não foi possível salvar a captura. Verifique o armazenamento e tente novamente.
+      </div>
+
+      <!-- Resumo Inline de Confirmação Visível com Comentários de Classificação -->
+      <div id="capture-inline-feedback" style="display: none; margin-bottom: 1.5rem;" role="region" aria-live="polite">
+        <!-- Renderizado dinamicamente após salvar com sucesso -->
+      </div>
+
+      <!-- Seção de Pré-Visualização Auxiliar (Opcional/Retrátil) -->
       <div id="capture-preview-section" style="display: none; margin-bottom: 2rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
           <div>
             <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;">
-              <span>🔍</span> Conferência & Pré-visualização
-              <span class="badge" id="preview-count-badge">0 itens detectados</span>
+              <span>🔍</span> Itens Processados
+              <span class="badge" id="preview-count-badge">0 itens</span>
             </h3>
-            <p class="muted" style="margin:0.2rem 0 0 0; font-size:0.825rem;">
-              Ajuste as classificações ou detalhes extraídos antes de consolidar nas abas oficiais.
-            </p>
-          </div>
-          <div class="flex gap-2">
-            <button class="btn btn-sm" id="btn-cancel-capture" type="button">Cancelar</button>
-            <button class="btn btn-sm btn-primary" id="btn-confirm-capture" type="button">✅ Confirmar tudo e gravar</button>
           </div>
         </div>
-
         <div id="capture-preview-list">
           <!-- Cartões inseridos dinamicamente pelo interpretador -->
         </div>
@@ -4568,10 +4570,12 @@ Tópico: Recursos Cíveis"></textarea>
           return;
         }
 
-        const parsed = this.parseCaptureText(raw);
-        this.currentParsedItems = parsed;
-        this.confirmCapture();
-        this.closeGlobalCapture();
+        const success = this.processAndSaveDirect(raw);
+        if (success) {
+          if (input) input.value = '';
+          this.closeGlobalCapture();
+          this.switchTab('tab-capture');
+        }
       }
 
       // ==================== TDAH: CARTÃO PRÓXIMO PASSO & RETOMADA ====================
@@ -5679,6 +5683,7 @@ Tópico: Recursos Cíveis"></textarea>
               <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${subColor}; margin-right:6px;"></span>
               <strong>${subName}</strong>
               ${sess.notes ? `<div class="muted" style="font-size:0.75rem;">${sess.notes}</div>` : ''}
+              ${sess.classificationComment ? `<div style="font-size:0.725rem; color:var(--accent-text); margin-top:2px; line-height:1.25;">💡 ${sess.classificationComment}</div>` : ''}
             </td>
             <td><span class="badge" style="font-size:0.75rem;">${sess.technique}</span></td>
             <td class="num">${sess.total}</td>
@@ -5738,10 +5743,16 @@ Tópico: Recursos Cíveis"></textarea>
               <h4 style="margin:0 0 0.25rem 0; font-size:0.95rem;">${err.topic}</h4>
               <p class="muted" style="font-size:0.78rem; margin:0 0 0.6rem 0;">Matéria: ${subName}</p>
 
-              <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.6rem; font-size:0.83rem; margin-bottom:0.75rem;">
+              <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.6rem; font-size:0.83rem; margin-bottom:0.6rem;">
                 <strong style="display:block; font-size:0.75rem; color:#b45309; margin-bottom:2px;">Ponto de esclarecimento:</strong>
                 ${err.reason}
               </div>
+
+              ${err.classificationComment ? `
+                <div style="font-size:0.74rem; color:var(--accent-text); margin-bottom:0.75rem; padding:0.35rem 0.5rem; background:rgba(79, 70, 229, 0.06); border-radius:var(--radius);">
+                  💡 ${err.classificationComment}
+                </div>
+              ` : ''}
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border); padding-top:0.5rem;">
@@ -5868,6 +5879,7 @@ Tópico: Recursos Cíveis"></textarea>
                 <div id="ans-${rev.id}" style="display:none; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem; font-size:0.875rem; margin-top:0.75rem;">
                   <strong style="color:var(--accent-text); display:block; margin-bottom:2px;">Resposta / Explicação:</strong>
                   ${rev.answer}
+                  ${rev.classificationComment ? `<div style="font-size:0.75rem; color:var(--accent-text); margin-top:0.5rem; padding-top:0.4rem; border-top:1px dashed var(--border);">💡 ${rev.classificationComment}</div>` : ''}
                 </div>
               </div>
 
@@ -6589,22 +6601,59 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         this.toast('Exemplo adicionado ao campo.');
       }
 
+      // Helper para normalizar texto (sem acentos e minúsculo)
+      normalizeText(s) {
+        return (s || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .trim();
+      }
+
+      // Fuzzy match flexível com matérias cadastradas
       fuzzyMatchSubject(text) {
         if (!this.data.subjects || this.data.subjects.length === 0) return null;
-        const clean = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-        const target = clean(text);
+        const target = this.normalizeText(text);
 
-        // 1. Correspondência direta ou substring no nome
-        for (const sub of this.data.subjects) {
-          const sName = clean(sub.name);
-          if (target.includes(sName)) return sub;
+        // 1. Ordem decrescente por tamanho de nome (para 'Direito Processual Civil' casar antes de 'Direito Civil')
+        const sortedSubs = [...this.data.subjects].sort((a, b) => (b.name || '').length - (a.name || '').length);
+
+        for (const sub of sortedSubs) {
+          const sName = this.normalizeText(sub.name);
+          if (sName && target.includes(sName)) {
+            return sub;
+          }
         }
 
-        // 2. Correspondência por palavras-chave relevantes
+        // 2. Mapeamento de termos comuns (ex.: "civil" -> "Direito Civil", "constitucional" -> "Direito Constitucional")
+        const termAliases = [
+          { keyword: 'civil', full: 'Direito Civil' },
+          { keyword: 'constitucional', full: 'Direito Constitucional' },
+          { keyword: 'processual civil', full: 'Direito Processual Civil' },
+          { keyword: 'processo civil', full: 'Direito Processual Civil' },
+          { keyword: 'penal', full: 'Direito Penal' },
+          { keyword: 'processual penal', full: 'Direito Processual Penal' },
+          { keyword: 'processo penal', full: 'Direito Processual Penal' },
+          { keyword: 'trabalho', full: 'Direito do Trabalho' },
+          { keyword: 'tributario', full: 'Direito Tributário' },
+          { keyword: 'administrativo', full: 'Direito Administrativo' },
+          { keyword: 'empresarial', full: 'Direito Empresarial' }
+        ];
+
+        for (const alias of termAliases) {
+          if (target.includes(alias.keyword)) {
+            const found = this.data.subjects.find(s => this.normalizeText(s.name) === this.normalizeText(alias.full) || this.normalizeText(s.name).includes(alias.keyword));
+            if (found) return found;
+          }
+        }
+
+        // 3. Correspondência por palavras-chave relevantes (> 3 letras)
         let best = null;
         let bestScore = 0;
-        for (const sub of this.data.subjects) {
-          const words = clean(sub.name).split(/\s+/).filter(w => w.length > 3 && !['direito', 'teoria', 'geral', 'para', 'introducao'].includes(w));
+        for (const sub of sortedSubs) {
+          const words = this.normalizeText(sub.name)
+            .split(/\s+/)
+            .filter(w => w.length > 3 && !['direito', 'teoria', 'geral', 'para', 'introducao'].includes(w));
           let score = 0;
           for (const w of words) {
             if (target.includes(w)) score += 2;
@@ -6617,29 +6666,87 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         return bestScore > 0 ? best : null;
       }
 
+      // Extração inteligente de matéria citada no texto quando não existe cadastrada
+      extractCitedSubject(line) {
+        // Tenta capturar após verbos ou preposições comuns
+        const patterns = [
+          /(?:estudei|estudo de|estudo|li|leitura de|leitura|resolvi\s+\d+\s+quest[õo]es\s+de|quest[ãa]o\s+de|quest[õo]es\s+de|revisar|revis[ãa]o\s+de)\s+([^,\.\n\(\)\:\;]+?)(?:\s+(?:das?|de\s+\d|por\s+\d|ontem|hoje|jurando|jurava|com\s+certeza|que\s+jurava)|$)/i,
+          /(?:mat[éè]ria|disciplina)\s+([^,\.\n]+)/i
+        ];
+
+        for (const pat of patterns) {
+          const m = line.match(pat);
+          if (m && m[1]) {
+            let candidate = m[1].replace(/^(?:artigo|art\.|livro|resumo|cap[ií]tulo)\s+/i, '').trim();
+            // Remove sufixos como "das 19h", etc.
+            candidate = candidate.replace(/\s+(?:das?|de)\s*\d.*$/i, '').trim();
+            if (candidate.length >= 3 && candidate.length <= 40 && !/^(?:uma|um|mais|muito|tudo|pouco)$/i.test(candidate)) {
+              // Capitaliza
+              return candidate.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            }
+          }
+        }
+        return null;
+      }
+
+      // Cria matéria automaticamente se não existir e retorna o objeto
+      ensureSubjectExists(nameCandidate) {
+        if (!nameCandidate) return null;
+        const existing = this.data.subjects.find(s => this.normalizeText(s.name) === this.normalizeText(nameCandidate));
+        if (existing) return { subject: existing, isNew: false };
+
+        const colors = ['#4f46e5', '#0284c7', '#059669', '#d97706', '#dc2626', '#7c3aed', '#db2777', '#0891b2'];
+        const chosenColor = colors[this.data.subjects.length % colors.length];
+
+        const newSub = {
+          id: 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          name: nameCandidate,
+          professor: '',
+          color: chosenColor
+        };
+        this.data.subjects.push(newSub);
+        return { subject: newSub, isNew: true };
+      }
+
+      // Classificador robusto e determinação de comentário explicativo
       classifyCaptureLine(line) {
         const clean = line.trim();
         const lower = clean.toLowerCase();
 
-        // c) Erro: "errei", "erro", "falhei", "jurava que sabia"
-        if (/errei|erro\b|falhei|jurava\s+que\s+sabia/i.test(lower)) {
-          return 'erro';
-        }
+        // 1. SESSÃO DE ESTUDO:
+        // Menciona estudo/leitura/questões com período de tempo ou período de tempo explícito
+        const hasTimeRange = /(?:das?|de)\s*(\d{1,2})(?:[h:]([0-5]\d)?)?\s*(?:[àaá]s?|-|até)\s*(\d{1,2})(?:[h:]([0-5]\d)?)?/i.test(lower);
+        const hasDuration = /por\s+(\d+(?:[,\.]\d+)?)\s*(h(?:oras?)?|min(?:utos?)?)/i.test(lower);
+        const hasQuestions = /(?:resolvi|fiz)\s+(\d+)\s+quest[õo]es/i.test(lower);
+        const hasStudyVerb = /(?:estudei|estudo|estudar|li|leitura)\b/i.test(lower);
 
-        // d) Tópico fraco / Revisão: "revisar", "não entendi", "difícil", "fraco em"
-        if (/revisar|revis[ãa]o|n[ãa]o\s+entendi|dif[íi]cil|fraco\s+em/i.test(lower)) {
-          return 'revisao';
-        }
-
-        // a) Sessão de estudo: "estudei", "das 14h às 16h", "de 14 às 16", "hoje estudei", "por 2h"
-        if (/(?:estudei|estudo|estudar)\b|(?:das?|de)\s*\d{1,2}(?:[h:]\d{2})?\s*(?:[àaá]s?|-|até)\s*\d{1,2}|por\s+\d+.*h/i.test(lower)) {
+        if ((hasStudyVerb && (hasTimeRange || hasDuration || hasQuestions)) || hasTimeRange || (hasStudyVerb && /(?:ontem|hoje|agora)\b/i.test(lower))) {
           return 'sessao';
         }
 
-        // b) Ideia ou sem padrão
-        return 'ideia';
+        // 2. ERRO:
+        // Contendo "errei", "erro", "errei questão", "jurava que sabia", "confundi", "falhei", "troquei"
+        if (/errei|erro\b|falhei|confundi|troquei|jurava\s+que\s+sabia/i.test(lower)) {
+          return 'erro';
+        }
+
+        // 3. REVISÃO:
+        // Contendo "revisar", "revisão", "reler" com tema
+        if (/revisar|revis[ãa]o|reler|n[ãa]o\s+entendi|dif[íi]cil\b|fraco\s+em/i.test(lower)) {
+          return 'revisao';
+        }
+
+        // 4. IDEIA:
+        // Entradas iniciadas ou contendo "ideia", "talvez", "poderia", "que tal", ou sugestões sem data/tempo
+        if (/^ideia\b|ideia|talvez|poderia|que\s+tal|sugest[ãa]o|lembrar\s+de|fazer\s+mapa/i.test(lower)) {
+          return 'ideia';
+        }
+
+        // Padrão fallback obrigatório: IDEIA (nunca descartar texto)
+        return 'ideia_fallback';
       }
 
+      // Parser completo e gerador dos comentários detalhados
       parseCaptureText(raw) {
         const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         const todayStr = new Date().toISOString().split('T')[0];
@@ -6650,21 +6757,40 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
 
         lines.forEach((line, index) => {
           const lower = line.toLowerCase();
-          const type = this.classifyCaptureLine(line);
-          const matchedSub = this.fuzzyMatchSubject(line);
+          const rawType = this.classifyCaptureLine(line);
+          const type = rawType === 'ideia_fallback' ? 'ideia' : rawType;
+          const isFallback = (rawType === 'ideia_fallback');
 
-          // Data detectada
+          // Tenta casar matéria cadastrada
+          let matchedSub = this.fuzzyMatchSubject(line);
+          let createdSubName = null;
+
+          // Se não encontrou cadastrada, tenta extrair a matéria citada
+          if (!matchedSub) {
+            const cited = this.extractCitedSubject(line);
+            if (cited) {
+              const res = this.ensureSubjectExists(cited);
+              if (res) {
+                matchedSub = res.subject;
+                if (res.isNew) createdSubName = res.subject.name;
+              }
+            }
+          }
+
+          // Se ainda não tiver matéria e tiver cadastradas, vincula a padrão se for sessão/erro
+          if (!matchedSub && this.data.subjects.length > 0 && type !== 'ideia') {
+            matchedSub = this.data.subjects[0];
+          }
+
           const isYesterday = /ontem/i.test(lower);
           const itemDate = isYesterday ? yesterdayStr : todayStr;
-
-          // Se fala no passado (ontem, estudei, fiz, conclui)
-          const isPast = isYesterday || /estudei|ontem|conclu[íi]|completei|fiz/i.test(lower);
 
           // Horários e Duração
           let startTime = '14:00';
           let duration = 60;
+          let periodText = null;
+
           const timeRangeMatch = line.match(/(?:das?|de)\s*(\d{1,2})(?:[h:]([0-5]\d)?)?\s*(?:[àaá]s?|-|até)\s*(\d{1,2})(?:[h:]([0-5]\d)?)?/i);
-          
           if (timeRangeMatch) {
             const h1 = parseInt(timeRangeMatch[1], 10);
             const m1 = parseInt(timeRangeMatch[2] || '0', 10);
@@ -6676,19 +6802,30 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
             if (totalEnd > totalStart) {
               duration = totalEnd - totalStart;
             }
+            periodText = `${h1}h${m1 > 0 ? m1 : ''} às ${h2}h${m2 > 0 ? m2 : ''}`;
           } else {
             const durMatch = line.match(/por\s+(\d+(?:[,\.]\d+)?)\s*(h(?:oras?)?|min(?:utos?)?)/i);
             if (durMatch) {
               const val = parseFloat(durMatch[1].replace(',', '.'));
               const unit = durMatch[2].toLowerCase();
               duration = unit.startsWith('h') ? Math.round(val * 60) : Math.round(val);
+              periodText = `${duration} min`;
             }
           }
 
-          // Se for Erro: grau de certeza
-          const hadHighConfidence = /jurava\s+que\s+sabia|certeza|tinha\s+certeza/i.test(lower);
+          // Questões resolvidas detectadas
+          let questionsCount = 10;
+          let correctCount = 8;
+          const qMatch = line.match(/(?:resolvi|acertei|fiz)\s+(\d+)\s+quest[õo]es/i);
+          if (qMatch) {
+            questionsCount = parseInt(qMatch[1], 10);
+            correctCount = Math.round(questionsCount * 0.8);
+          }
 
-          // Limpeza do título / tópico
+          // Alta confiança no erro
+          const hadHighConfidence = /jurava\s+que\s+sabia|certeza|tinha\s+certeza|jurava/i.test(lower);
+
+          // Tópico limpo
           let cleanTopic = line
             .replace(/^(?:estudei|estudar|ideia:?|revisar|errei|quest[ãa]o\s+de)\s*/i, '')
             .replace(/(?:das?|de)\s*\d{1,2}(?:[h:]\d{2})?\s*(?:[àaá]s?|-|até)\s*\d{1,2}.*$/i, '')
@@ -6696,28 +6833,377 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
             .trim();
           if (!cleanTopic) cleanTopic = line;
 
+          // ================= GERAÇÃO DO COMENTÁRIO EXPLICATIVO OBRIGATÓRIO =================
+          let comment = '';
+          const subInfo = matchedSub ? matchedSub.name : 'não especificada';
+          const newSubNote = createdSubName ? ` Matéria '${createdSubName}' não existia e foi criada automaticamente.` : '';
+
+          if (type === 'sessao') {
+            if (periodText) {
+              comment = `Classificado como sessão de estudo: detectei período de tempo (${periodText}) e matéria ${subInfo}.${newSubNote}`;
+            } else {
+              comment = `Classificado como sessão de estudo: detectei menção a estudo e matéria ${subInfo}.${newSubNote}`;
+            }
+          } else if (type === 'erro') {
+            if (hadHighConfidence) {
+              comment = `Classificado como erro de alta confiança: você escreveu 'jurava que sabia'.${newSubNote}`;
+            } else {
+              comment = `Classificado como erro: detectei relato de falha ou questão errada em ${subInfo}.${newSubNote}`;
+            }
+          } else if (type === 'revisao') {
+            comment = `Classificado como revisão: detectei intenção de rever ou reler tema (${cleanTopic}).${newSubNote}`;
+          } else {
+            // IDEIA
+            if (isFallback) {
+              comment = `Classificado como ideia: sem data ou tempo detectados.`;
+            } else {
+              comment = `Classificado como ideia: sugestão ou insight detectado sem agendamento direto.`;
+            }
+          }
+
           parsedItems.push({
-            id: 'parse-' + Date.now() + '-' + index,
+            id: 'item-' + Date.now() + '-' + index,
             originalText: line,
             type, // 'sessao' | 'ideia' | 'erro' | 'revisao'
-            subjectId: matchedSub ? matchedSub.id : (this.data.subjects[0] ? this.data.subjects[0].id : ''),
-            suggestedNewSubject: !matchedSub ? cleanTopic.split(/\s+/).slice(0, 3).join(' ') : '',
+            isFallback,
+            subjectId: matchedSub ? matchedSub.id : '',
+            subjectName: matchedSub ? matchedSub.name : '',
+            createdSubName,
             date: itemDate,
             startTime,
             duration,
-            isCompleted: isPast,
-            sessionTotal: 10,
-            sessionCorrect: 8,
+            periodText,
+            sessionTotal: questionsCount,
+            sessionCorrect: correctCount,
             sessionJol: 75,
             errorType: hadHighConfidence ? 'Jurava que sabia' : 'Sabia que não sabia',
-            errorReason: hadHighConfidence ? 'Achei que dominava a regra, mas caí em uma exceção ou pegadinha.' : 'Tive dúvida no conceito teórico.',
+            errorReason: hadHighConfidence 
+              ? `Achei que dominava a regra, mas caí em uma exceção ou pegadinha em "${cleanTopic}".` 
+              : `Dúvida no conceito teórico: "${cleanTopic}".`,
             makeCard: true,
             concept: cleanTopic,
-            explanation: `Revisão do ponto: ${cleanTopic}`
+            explanation: `Revisão do ponto: ${cleanTopic}`,
+            classificationComment: comment
           });
         });
 
         return parsedItems;
+      }
+
+      // Salva de forma definitiva e direta cada item gerado na captura
+      processAndSaveDirect(rawText) {
+        const errorBanner = document.getElementById('capture-inline-error');
+        if (errorBanner) errorBanner.style.display = 'none';
+
+        const parsedList = this.parseCaptureText(rawText);
+        if (!parsedList || parsedList.length === 0) {
+          this.toast('Nenhum texto reconhecido para salvar.');
+          return false;
+        }
+
+        const now = Date.now();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const createdSummary = [];
+
+        try {
+          parsedList.forEach((item, idx) => {
+            const histEntry = {
+              id: 'hist-' + now + '-' + idx,
+              timestamp: now,
+              dateStr: todayStr,
+              originalText: item.originalText,
+              type: item.type,
+              typeLabel: item.type === 'sessao' ? 'Sessão' : (item.type === 'ideia' ? 'Ideia' : (item.type === 'erro' ? 'Erro' : 'Revisão')),
+              classificationComment: item.classificationComment,
+              createdItems: {}
+            };
+
+            // 1. SESSÃO DE ESTUDO
+            if (item.type === 'sessao') {
+              const dateObj = new Date(item.date + 'T12:00:00');
+              const dayNum = String(dateObj.getDay());
+
+              const schId = 'sch-' + now + '-' + idx;
+              this.data.schedule.push({
+                id: schId,
+                day: dayNum,
+                subjectId: item.subjectId || '__SET_MISTO__',
+                time: item.startTime,
+                duration: item.duration,
+                isFixed: false,
+                classificationComment: item.classificationComment
+              });
+              histEntry.createdItems.scheduleId = schId;
+
+              const sessId = 'sess-' + now + '-' + idx;
+              this.data.sessions.unshift({
+                id: sessId,
+                date: item.date,
+                subjectId: item.subjectId,
+                technique: 'Recuperação ativa (Captura)',
+                total: item.sessionTotal,
+                correct: item.sessionCorrect,
+                jol: item.sessionJol,
+                notes: `${item.concept} (${Math.round(item.duration / 60 * 10) / 10}h)`,
+                classificationComment: item.classificationComment
+              });
+              histEntry.createdItems.sessionId = sessId;
+
+              const durHours = Math.round((item.duration / 60) * 10) / 10;
+              createdSummary.push({
+                type: 'sessao',
+                destTab: 'tab-sessions',
+                destLabel: 'Ver em Sessões',
+                text: `✅ 1 sessão criada em Sessões (${item.subjectName || 'Matéria'}, ${durHours}h)`,
+                comment: item.classificationComment,
+                isFallback: false,
+                id: sessId
+              });
+            }
+
+            // 2. IDEIA
+            else if (item.type === 'ideia') {
+              const ideaId = 'idea-' + now + '-' + idx;
+              if (!this.data.ideas) this.data.ideas = [];
+              this.data.ideas.unshift({
+                id: ideaId,
+                text: item.concept,
+                date: item.date,
+                classificationComment: item.classificationComment,
+                isFallback: item.isFallback,
+                originalText: item.originalText
+              });
+              histEntry.createdItems.ideaId = ideaId;
+
+              createdSummary.push({
+                type: 'ideia',
+                destTab: 'tab-capture',
+                destLabel: 'Ver em Ideias Capturadas',
+                text: `✅ 1 ideia salva em Captura ("${item.concept.substring(0, 45)}...")`,
+                comment: item.classificationComment,
+                isFallback: item.isFallback,
+                id: ideaId,
+                concept: item.concept
+              });
+            }
+
+            // 3. ERRO
+            else if (item.type === 'erro') {
+              const errId = 'err-' + now + '-' + idx;
+              this.data.errors.unshift({
+                id: errId,
+                date: item.date,
+                subjectId: item.subjectId,
+                topic: item.concept,
+                type: item.errorType,
+                reason: item.errorReason,
+                isCard: item.errorType === 'Jurava que sabia',
+                classificationComment: item.classificationComment
+              });
+              histEntry.createdItems.errorId = errId;
+
+              if (item.errorType === 'Jurava que sabia') {
+                const revId = 'rev-' + now + '-' + idx;
+                this.data.reviews.unshift({
+                  id: revId,
+                  subjectId: item.subjectId,
+                  title: `[Caderno de erros] ${item.concept}`,
+                  answer: item.errorReason,
+                  stage: 0,
+                  intervalDays: FSRS_INTERVALS[0],
+                  nextReview: todayStr,
+                  origin: 'Captura (Jurava que sabia - Hipercorreção)',
+                  classificationComment: item.classificationComment
+                });
+                histEntry.createdItems.reviewId = revId;
+              }
+
+              createdSummary.push({
+                type: 'erro',
+                destTab: 'tab-errors',
+                destLabel: 'Ver no Caderno de erros',
+                text: `✅ 1 erro salvo no Caderno de erros (${item.subjectName || 'Geral'}${item.errorType === 'Jurava que sabia' ? ' - Alta Confiança' : ''})`,
+                comment: item.classificationComment,
+                isFallback: false,
+                id: errId
+              });
+            }
+
+            // 4. REVISÃO
+            else if (item.type === 'revisao') {
+              const revId = 'rev-' + now + '-' + idx;
+              this.data.reviews.unshift({
+                id: revId,
+                subjectId: item.subjectId,
+                title: item.concept,
+                answer: item.explanation,
+                stage: 0,
+                intervalDays: FSRS_INTERVALS[0],
+                nextReview: todayStr,
+                origin: 'Captura Rápida',
+                classificationComment: item.classificationComment
+              });
+              histEntry.createdItems.reviewId = revId;
+
+              createdSummary.push({
+                type: 'revisao',
+                destTab: 'tab-reviews',
+                destLabel: 'Ver em Revisões',
+                text: `✅ 1 revisão agendada em Revisões (${item.concept.substring(0, 45)}...)`,
+                comment: item.classificationComment,
+                isFallback: false,
+                id: revId
+              });
+            }
+
+            if (!this.data.captureHistory) this.data.captureHistory = [];
+            this.data.captureHistory.unshift(histEntry);
+          });
+
+          // Salva no localStorage com validação
+          const savedOk = this.save();
+          if (!savedOk) {
+            throw new Error('Falha de escrita no localStorage');
+          }
+
+          // Renderiza tudo imediatamente
+          this.renderAll();
+
+          // Exibe confirmação inline com botões discretos e comentários
+          this.renderInlineCaptureResults(createdSummary);
+          return true;
+        } catch (err) {
+          console.error('[ERRO CAPTURA]:', err);
+          if (errorBanner) {
+            errorBanner.style.display = 'block';
+            errorBanner.innerText = '⚠️ Não foi possível salvar a captura. Verifique as preferências ou libere espaço no armazenamento.';
+          }
+          this.toast('Não foi possível salvar a captura');
+          return false;
+        }
+      }
+
+      // Renderiza resumo visível do que foi criado inline
+      renderInlineCaptureResults(summaryList) {
+        const container = document.getElementById('capture-inline-feedback');
+        if (!container) return;
+
+        container.style.display = 'block';
+        container.innerHTML = `
+          <div class="panel" style="border: 2px solid var(--accent); background: var(--surface); padding: 1.25rem; border-radius: var(--radius); box-shadow: 0 4px 14px rgba(79, 70, 229, 0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;">
+              <strong style="font-size: 1.05rem; color: var(--text);">Resumo da Captura Processada</strong>
+              <button type="button" class="btn btn-sm" id="btn-close-inline-summary" style="font-size:0.75rem; padding: 2px 6px;">✕ Fechar resumo</button>
+            </div>
+            <div id="inline-summary-items-list" class="flex flex-col gap-3"></div>
+          </div>
+        `;
+
+        safeAddListener('btn-close-inline-summary', 'click', () => {
+          container.style.display = 'none';
+        });
+
+        const listEl = container.querySelector('#inline-summary-items-list');
+
+        summaryList.forEach(item => {
+          const row = document.createElement('div');
+          row.style.background = 'var(--bg)';
+          row.style.border = '1px solid var(--border)';
+          row.style.borderRadius = 'var(--radius)';
+          row.style.padding = '0.75rem 1rem';
+
+          let manualReclassifyHtml = '';
+          if (item.isFallback) {
+            manualReclassifyHtml = `
+              <div style="margin-top: 0.6rem; padding: 0.5rem 0.75rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius); font-size: 0.825rem; color: #92400e;">
+                <span style="font-weight:600;">Salvei como ideia. Quer classificar manualmente?</span>
+                <div style="display:flex; gap:0.4rem; margin-top:0.4rem; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm" onclick="app.reclassifyIdea('${item.id}', 'sessao')">Mover para Sessão</button>
+                  <button type="button" class="btn btn-sm" onclick="app.reclassifyIdea('${item.id}', 'erro')">Mover para Erro</button>
+                  <button type="button" class="btn btn-sm" onclick="app.reclassifyIdea('${item.id}', 'revisao')">Mover para Revisão</button>
+                </div>
+              </div>
+            `;
+          }
+
+          row.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
+              <strong style="font-size: 0.95rem; color: var(--text);">${item.text}</strong>
+              <button type="button" class="btn btn-sm" onclick="app.switchTab('${item.destTab}')" style="font-size:0.78rem; font-weight:600; padding:2px 8px;">
+                ${item.destLabel} →
+              </button>
+            </div>
+            <div style="margin-top: 0.4rem; font-size: 0.85rem; color: var(--accent-text); background: rgba(79, 70, 229, 0.08); padding: 0.4rem 0.65rem; border-radius: 4px; border-left: 3px solid var(--accent); line-height: 1.35;">
+              💡 <strong>Comentário de classificação:</strong> ${item.comment}
+            </div>
+            ${manualReclassifyHtml}
+          `;
+
+          listEl.appendChild(row);
+        });
+
+        container.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      // Reclassificação manual para quando a ideia é salva pelo fallback
+      reclassifyIdea(ideaId, targetType) {
+        const idea = (this.data.ideas || []).find(i => i.id === ideaId);
+        if (!idea) return;
+
+        // Remove das ideias
+        this.data.ideas = this.data.ideas.filter(i => i.id !== ideaId);
+
+        const now = Date.now();
+        const todayStr = new Date().toISOString().split('T')[0];
+        let matchedSub = this.fuzzyMatchSubject(idea.text) || this.data.subjects[0];
+        let subId = matchedSub ? matchedSub.id : '';
+        let subName = matchedSub ? matchedSub.name : 'Geral';
+
+        if (targetType === 'sessao') {
+          this.data.sessions.unshift({
+            id: 'sess-' + now,
+            date: todayStr,
+            subjectId: subId,
+            technique: 'Recuperação ativa (Captura)',
+            total: 10,
+            correct: 8,
+            jol: 75,
+            notes: idea.text,
+            classificationComment: 'Classificado manualmente pelo usuário como Sessão de estudo.'
+          });
+          this.toast('Movido para Sessões de Estudo!');
+          this.switchTab('tab-sessions');
+        } else if (targetType === 'erro') {
+          this.data.errors.unshift({
+            id: 'err-' + now,
+            date: todayStr,
+            subjectId: subId,
+            topic: idea.text,
+            type: 'Sabia que não sabia',
+            reason: idea.text,
+            isCard: false,
+            classificationComment: 'Classificado manualmente pelo usuário como Ponto no Caderno de erros.'
+          });
+          this.toast('Movido para o Caderno de erros!');
+          this.switchTab('tab-errors');
+        } else if (targetType === 'revisao') {
+          this.data.reviews.unshift({
+            id: 'rev-' + now,
+            subjectId: subId,
+            title: idea.text,
+            answer: `Revisão do ponto: ${idea.text}`,
+            stage: 0,
+            intervalDays: FSRS_INTERVALS[0],
+            nextReview: todayStr,
+            origin: 'Captura (Reclassificado manualmente)',
+            classificationComment: 'Classificado manualmente pelo usuário para Fila de Revisão Espaçada.'
+          });
+          this.toast('Movido para a Fila de Revisões!');
+          this.switchTab('tab-reviews');
+        }
+
+        this.save();
+        this.renderAll();
       }
 
       handleProcessCapture() {
@@ -6729,13 +7215,11 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
           return;
         }
 
-        this.currentParsedItems = this.parseCaptureText(raw);
-        this.renderCapturePreview();
-
-        const previewSec = document.getElementById('capture-preview-section');
-        if (previewSec) {
-          previewSec.style.display = 'block';
-          previewSec.scrollIntoView({ behavior: 'smooth' });
+        // Salva com confirmação direta e nunca limpa antes de sucesso
+        const success = this.processAndSaveDirect(raw);
+        if (success && input) {
+          input.value = '';
+          this.toast('Captura analisada, classificada e salva!');
         }
       }
 
@@ -7090,12 +7574,24 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
         this.data.ideas.forEach(idea => {
           const item = document.createElement('div');
           item.className = 'idea-card';
+
+          const reclassifyButtons = idea.isFallback ? `
+            <div style="display:flex; gap:0.3rem; margin-top:0.35rem; flex-wrap:wrap;">
+              <span class="muted" style="font-size:0.72rem; align-self:center;">Classificar como:</span>
+              <button type="button" class="btn btn-sm" style="font-size:0.7rem; padding:1px 5px;" onclick="app.reclassifyIdea('${idea.id}', 'sessao')">Sessão</button>
+              <button type="button" class="btn btn-sm" style="font-size:0.7rem; padding:1px 5px;" onclick="app.reclassifyIdea('${idea.id}', 'erro')">Erro</button>
+              <button type="button" class="btn btn-sm" style="font-size:0.7rem; padding:1px 5px;" onclick="app.reclassifyIdea('${idea.id}', 'revisao')">Revisão</button>
+            </div>
+          ` : '';
+
           item.innerHTML = `
             <div style="flex:1; min-width:200px;">
               <span style="font-size:0.875rem; font-weight:500; display:block;">${idea.text}</span>
               <span class="muted" style="font-size:0.75rem;">Capturada em ${idea.date}</span>
+              ${idea.classificationComment ? `<div style="font-size:0.75rem; color:var(--accent-text); margin-top:2px;">💡 ${idea.classificationComment}</div>` : ''}
+              ${reclassifyButtons}
             </div>
-            <div class="flex gap-1">
+            <div class="flex gap-1" style="align-self:flex-start;">
               <button class="btn btn-sm btn-primary" style="font-size:0.75rem; padding:3px 8px;" onclick="app.transformIdeaToSchedule('${idea.id}')">
                 📅 Agendar no Cronograma
               </button>
@@ -7177,6 +7673,7 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
                 <span class="muted" style="font-size:0.72rem;">${timeText} (${hist.dateStr})</span>
               </div>
               <div style="color:var(--text); font-size:0.8rem; line-height:1.3;">${hist.originalText}</div>
+              ${hist.classificationComment ? `<div style="font-size:0.73rem; color:var(--accent-text); margin-top:2px;">💡 ${hist.classificationComment}</div>` : ''}
             </div>
             <div>
               ${isUndoable 
