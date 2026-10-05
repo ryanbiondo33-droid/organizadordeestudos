@@ -1013,7 +1013,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
             <span>⏱️</span> Sessões
           </button>
           <button class="nav-sub-btn" data-tab="tab-ai-exercises" role="tab" aria-selected="false">
-            <span>🤖</span> Exercícios IA <span class="counter-badge app-secondary" id="nav-ai-count" style="display:none;">0</span>
+            <span>✍️</span> Exercícios <span class="counter-badge app-secondary" id="nav-ai-count" style="display:none;">0</span>
           </button>
           <button class="nav-sub-btn" data-tab="tab-reviews" role="tab" aria-selected="false">
             <span>🔄</span> Revisões <span class="counter-badge app-secondary" id="nav-review-count">0</span>
@@ -1071,6 +1071,54 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
     <!-- TAB 1: PAINEL INICIAL (DASHBOARD) -->
     <section id="tab-dashboard" class="tab-content active" role="tabpanel" aria-label="Painel Hoje">
       
+      <!-- VISÃO DE BOAS-VINDAS (Quando o app estiver completamente vazio) -->
+      <section id="dashboard-welcome-view" class="panel" style="display: none; padding: 2rem 1.5rem; margin-bottom: 1.5rem; border: 2px solid var(--accent); border-radius: calc(var(--radius) * 1.5);">
+        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+          <span style="font-size: 1.5rem;">👋</span>
+          <h2 style="font-size: 1.45rem; font-weight: 700; margin: 0; color: var(--text);">Bem-vindo ao Organizador de Estudos</h2>
+        </div>
+        <p class="muted" style="margin: 0 0 1.5rem 0; font-size: 0.95rem; line-height: 1.5;">
+          Seu painel está pronto para os seus estudos. Siga estes 3 passos simples para começar:
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.75rem;">
+          <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-contrast, #fff); font-weight: 700; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px;">1</span>
+            <div>
+              <strong style="display: block; font-size: 0.95rem; color: var(--text);">1. Cadastre suas matérias em Organizar;</strong>
+              <span class="muted" style="font-size: 0.85rem;">Adicione as disciplinas do seu curso para acompanhar sua retenção e calibrar suas sessões.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-contrast, #fff); font-weight: 700; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px;">2</span>
+            <div>
+              <strong style="display: block; font-size: 0.95rem; color: var(--text);">2. Use a Captura para anotar o que estudou ou pensou;</strong>
+              <span class="muted" style="font-size: 0.85rem;">Digite livremente o que estudou, ideias ou dúvidas para classificar tudo automaticamente.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-contrast, #fff); font-weight: 700; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px;">3</span>
+            <div>
+              <strong style="display: block; font-size: 0.95rem; color: var(--text);">3. Pratique no banco de questões da aba Exercícios;</strong>
+              <span class="muted" style="font-size: 0.85rem;">Treine com o banco de itens Certo/Errado com feedback inline e agendamento automático de revisões.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px dashed var(--border);">
+          <button type="button" class="btn btn-primary" id="btn-welcome-first-subject" style="font-weight: 700; padding: 0.6rem 1.25rem;">
+            Cadastrar primeira matéria
+          </button>
+          <button type="button" class="btn" id="btn-welcome-load-sample" style="font-weight: 500;">
+            Carregar exemplo
+          </button>
+        </div>
+      </section>
+
+      <!-- CONTEÚDO ATIVO DO PAINEL -->
+      <div id="dashboard-active-content">
       <!-- CARTÃO DOMINANTE: PRÓXIMO PASSO (Prioridade Máxima TDAH) -->
       <section class="next-step-card" id="next-step-section" aria-labelledby="next-step-heading">
         <div class="next-step-header">
@@ -1222,6 +1270,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           <button class="btn" id="btn-dash-schedule" type="button">📅 Ver Grade Semanal</button>
         </div>
       </div>
+      </div><!-- /#dashboard-active-content -->
     </section>
 
     <!-- TAB: CAPTURA RÁPIDA DE TEXTO LIVRE -->
@@ -1422,173 +1471,242 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       </div>
     </section>
 
-    <!-- TAB: EXERCÍCIOS IA (INTEGRAÇÃO ADAPTA ONE) -->
-    <section id="tab-ai-exercises" class="tab-content" role="tabpanel">
+    <!-- TAB: EXERCÍCIOS (BANCO EMBUTIDO UNESC COLATINA + GERAR COM IA) -->
+    <section id="tab-ai-exercises" class="tab-content" role="tabpanel" aria-label="Exercícios">
       <div class="page-head">
         <div>
-          <h2 class="page-title">Exercícios por IA • Adapta ONE</h2>
-          <p class="page-subtitle">Ponte de ida e volta: gere o prompt cirúrgico, receba no chat da Adapta e pratique aqui</p>
+          <h2 class="page-title">Exercícios & Diagnóstico</h2>
+          <p class="page-subtitle">Prática ativa sem interrupções: banco de questões da grade de Direito UNESC e extensão com IA</p>
         </div>
       </div>
 
-      <!-- Explicação do fluxo em 3 passos -->
-      <div class="panel" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(99, 102, 241, 0.02)); border-color: rgba(79, 70, 229, 0.2);">
-        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: var(--accent-text); display: flex; align-items: center; gap: 0.4rem;">
-          <span>⚡</span> Como funciona o ciclo de prática com IA
-        </h3>
-        <div class="flow-steps">
-          <div class="flow-step-card">
-            <span class="flow-step-num">1</span>
+      <!-- Sub-navegação interna: Banco de questões (padrão) x Gerar com IA -->
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+        <button type="button" class="btn btn-sm btn-primary" id="subtab-btn-bank" style="font-weight: 600;">
+          📚 Banco de Questões (58 Disciplinas UNESC)
+        </button>
+        <button type="button" class="btn btn-sm" id="subtab-btn-ai" style="font-weight: 500;">
+          🤖 Gerar com IA (Adapta ONE)
+        </button>
+      </div>
+
+      <!-- MODO 1: BANCO DE QUESTÕES PRÓPRIO (PADRÃO) -->
+      <div id="exercises-bank-view">
+        <!-- Filtros e Seletor de Disciplina -->
+        <div class="panel" style="margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
             <div>
-              <strong style="display: block; font-size: 0.85rem; margin-bottom: 2px;">Configure e copie o prompt</strong>
-              <span class="muted" style="font-size: 0.78rem;">Escolha a matéria fraca ou prioritária e clique em gerar o comando formatado.</span>
+              <h3 style="margin: 0; font-size: 1.05rem;">Prática Deliberada por Disciplina</h3>
+              <p class="muted" style="margin: 0.2rem 0 0 0; font-size: 0.8rem;">
+                Itens no formato Certo/Errado (estilo Cebraspe). Questões autorais de diagnóstico baseadas na legislação e na matriz de Direito da UNESC Colatina.
+              </p>
             </div>
+            <button class="btn btn-sm" id="btn-toggle-bank-stats" type="button" style="font-size: 0.8rem;">
+              📊 Ver estatísticas por disciplina
+            </button>
           </div>
-          <div class="flow-step-card">
-            <span class="flow-step-num">2</span>
+
+          <div class="shell-grid" style="grid-template-columns: 1fr 2fr; gap: 0.75rem;">
             <div>
-              <strong style="display: block; font-size: 0.85rem; margin-bottom: 2px;">Cole no chat da Adapta ONE</strong>
-              <span class="muted" style="font-size: 0.78rem;">Envie no chat da IA para que ela crie as questões estruturadas exatamente no padrão.</span>
+              <label for="bank-filter-category" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Eixo / Categoria</label>
+              <select id="bank-filter-category" class="input" style="width: 100%;">
+                <option value="all">Todas as 6 Categorias (Sessão Mista)</option>
+                <option value="Fundamentos e formação transversal">1. Fundamentos e Formação Transversal (17)</option>
+                <option value="Direito público">2. Direito Público (10)</option>
+                <option value="Direito civil, empresarial e consumo">3. Direito Civil, Empresarial e Consumo (12)</option>
+                <option value="Direito penal">4. Direito Penal (4)</option>
+                <option value="Processo e prática">5. Processo e Prática (13)</option>
+                <option value="Direito do trabalho">6. Direito do Trabalho (2)</option>
+              </select>
             </div>
-          </div>
-          <div class="flow-step-card">
-            <span class="flow-step-num">3</span>
             <div>
-              <strong style="display: block; font-size: 0.85rem; margin-bottom: 2px;">Cole de volta e pratique</strong>
-              <span class="muted" style="font-size: 0.78rem;">Importe o texto: os erros alimentam o Error Log e a Fila Espaçada automaticamente!</span>
+              <label for="bank-filter-discipline" style="display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem;">Disciplina da Matriz</label>
+              <select id="bank-filter-discipline" class="input" style="width: 100%;">
+                <option value="all">Todas as disciplinas (Intercalamento geral)</option>
+                <!-- Preenchido dinamicamente via JS -->
+              </select>
             </div>
           </div>
         </div>
-        <p class="muted" style="margin: 0; font-size: 0.8rem; border-top: 1px dashed var(--border); padding-top: 0.6rem;">
-          🔒 <strong>Nota:</strong> O app não conversa com a IA diretamente; essa ponte mantém seus dados no navegador e o esforço de recuperação com você.
-        </p>
+
+        <!-- Painel de Estatísticas Retrátil por Disciplina -->
+        <div id="bank-stats-panel" class="panel" style="display: none; margin-bottom: 1.25rem; background: var(--bg); border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div>
+              <strong style="font-size: 0.95rem;">Desempenho Acumulado por Disciplina</strong>
+              <p class="muted" style="margin: 0; font-size: 0.78rem;">Disciplinas com taxa abaixo de 70% são destacadas em vermelho para revisão prioritária.</p>
+            </div>
+            <button class="btn btn-sm" id="btn-close-bank-stats" type="button" style="font-size: 0.75rem;">✕ Fechar estatísticas</button>
+          </div>
+          <div id="bank-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.5rem; max-height: 280px; overflow-y: auto; padding-right: 0.25rem;">
+            <!-- Linhas de estatísticas inseridas por JS -->
+          </div>
+        </div>
+
+        <!-- Cartão Ativo de Prática (Sem popups, feedback inline imediato) -->
+        <div id="bank-practice-card-container">
+          <!-- Renderizado dinamicamente por JS -->
+        </div>
       </div>
 
-      <!-- Grid com Gerador e Importador -->
-      <div class="shell-grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
-        
-        <!-- Bloco 1: Configuração e Gerador de Prompt -->
-        <div class="panel flex flex-col justify-between">
-          <div>
-            <h3 style="margin:0 0 0.85rem 0; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center;">
-              <span>1. Configurar & Gerar Prompt</span>
-              <button class="btn btn-sm" id="btn-ai-auto-target" type="button" title="Auto-selecionar matéria com maior gap ou erros" style="font-size:0.75rem;">
-                🎯 Usar tópicos prioritários
+      <!-- MODO 2: GERAR COM IA (ADAPTA ONE) -->
+      <div id="exercises-ai-view" style="display: none;">
+        <!-- Explicação do fluxo em 3 passos -->
+        <div class="panel" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(99, 102, 241, 0.02)); border-color: rgba(79, 70, 229, 0.2);">
+          <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: var(--accent-text); display: flex; align-items: center; gap: 0.4rem;">
+            <span>⚡</span> Ciclo complementar com Adapta ONE
+          </h3>
+          <div class="flow-steps">
+            <div class="flow-step-card">
+              <span class="flow-step-num">1</span>
+              <div>
+                <strong style="display: block; font-size: 0.85rem; margin-bottom: 2px;">Configure e copie o prompt</strong>
+                <span class="muted" style="font-size: 0.78rem;">Escolha a matéria fraca ou prioritária e gere o comando formatado.</span>
+              </div>
+            </div>
+            <div class="flow-step-card">
+              <span class="flow-step-num">2</span>
+              <div>
+                <strong style="display: block; font-size: 0.85rem; margin-bottom: 2px;">Cole no chat da Adapta ONE</strong>
+                <span class="muted" style="font-size: 0.78rem;">Envie no chat da IA para que ela crie questões no padrão solicitado.</span>
+              </div>
+            </div>
+            <div class="flow-step-card">
+              <span class="flow-step-num">3</span>
+              <div>
+                <strong style="display: block; font-size: 0.85rem; margin-bottom: 2px;">Cole de volta e pratique</strong>
+                <span class="muted" style="font-size: 0.78rem;">Importe o texto e responda com feedback inline direto.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid com Gerador e Importador -->
+        <div class="shell-grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          
+          <!-- Bloco 1: Configuração e Gerador de Prompt -->
+          <div class="panel flex flex-col justify-between">
+            <div>
+              <h3 style="margin:0 0 0.85rem 0; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>1. Configurar & Gerar Prompt</span>
+                <button class="btn btn-sm" id="btn-ai-auto-target" type="button" title="Auto-selecionar matéria prioritária" style="font-size:0.75rem;">
+                  🎯 Usar prioritária
+                </button>
+              </h3>
+
+              <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-subject-select">Matéria Alvo *</label>
+                <select id="ai-subject-select" class="input" style="width: 100%;">
+                  <!-- Inserido dinamicamente -->
+                </select>
+              </div>
+
+              <div class="shell-grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
+                <div>
+                  <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-batch-count">Qtd. de Questões</label>
+                  <select id="ai-batch-count" class="input" style="width: 100%;">
+                    <option value="5">5 questões</option>
+                    <option value="10" selected>10 questões</option>
+                    <option value="15">15 questões</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-q-type">Tipo</label>
+                  <select id="ai-q-type" class="input" style="width: 100%;">
+                    <option value="multipla_escolha" selected>Múltipla Escolha</option>
+                    <option value="dissertativa">Dissertativa Curta</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 0.85rem;">
+                <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-difficulty">Dificuldade</label>
+                <select id="ai-difficulty" class="input" style="width: 100%;">
+                  <option value="mista" selected>Mista (Gradual: 15% difíceis)</option>
+                  <option value="fácil">Fácil (Fundamentos)</option>
+                  <option value="média">Média (Padrão universitário)</option>
+                  <option value="difícil">Difícil (Casos complexos/pegadinhas)</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-prompt-preview">Prompt Formatado</label>
+                <textarea id="ai-prompt-preview" class="prompt-box" rows="7" readonly placeholder="Clique no botão abaixo para gerar o prompt estruturado..."></textarea>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button class="btn btn-primary" id="btn-generate-ai-prompt" style="flex: 1;" type="button">
+                ⚙️ Gerar prompt para a Adapta
               </button>
-            </h3>
-
-            <div style="margin-bottom: 0.75rem;">
-              <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-subject-select">Matéria Alvo *</label>
-              <select id="ai-subject-select" class="input" style="width: 100%;">
-                <!-- Inserido dinamicamente -->
-              </select>
-            </div>
-
-            <div class="shell-grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
-              <div>
-                <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-batch-count">Qtd. de Questões</label>
-                <select id="ai-batch-count" class="input" style="width: 100%;">
-                  <option value="5">5 questões</option>
-                  <option value="10" selected>10 questões</option>
-                  <option value="15">15 questões</option>
-                </select>
-              </div>
-              <div>
-                <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-q-type">Tipo</label>
-                <select id="ai-q-type" class="input" style="width: 100%;">
-                  <option value="multipla_escolha" selected>Múltipla Escolha</option>
-                  <option value="dissertativa">Dissertativa Curta</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="margin-bottom: 0.85rem;">
-              <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-difficulty">Dificuldade</label>
-              <select id="ai-difficulty" class="input" style="width: 100%;">
-                <option value="mista" selected>Mista (Gradual: 15% difíceis)</option>
-                <option value="fácil">Fácil (Fundamentos)</option>
-                <option value="média">Média (Padrão universitário)</option>
-                <option value="difícil">Difícil (Casos complexos/pegadinhas)</option>
-              </select>
-            </div>
-
-            <div style="margin-bottom: 0.75rem;">
-              <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-prompt-preview">Prompt Formatado para a Adapta</label>
-              <textarea id="ai-prompt-preview" class="prompt-box" rows="7" readonly placeholder="Clique no botão abaixo para gerar o prompt estruturado..."></textarea>
+              <button class="btn" id="btn-copy-ai-prompt" style="flex: 1;" type="button">
+                📋 Copiar prompt
+              </button>
             </div>
           </div>
 
-          <div class="flex gap-2">
-            <button class="btn btn-primary" id="btn-generate-ai-prompt" style="flex: 1;" type="button">
-              ⚙️ Gerar prompt para a Adapta
-            </button>
-            <button class="btn" id="btn-copy-ai-prompt" style="flex: 1;" type="button">
-              📋 Copiar prompt
-            </button>
-          </div>
-        </div>
+          <!-- Bloco 2: Importação das Questões -->
+          <div class="panel flex flex-col justify-between">
+            <div>
+              <h3 style="margin:0 0 0.85rem 0; font-size: 1.05rem;">
+                2. Importar Resposta da Adapta
+              </h3>
+              
+              <p class="muted" style="margin: 0 0 0.5rem 0; font-size: 0.8rem;">
+                Cole o texto gerado pela Adapta ONE no campo abaixo. O leitor reconhece o padrão por blocos com <code>Enunciado</code>, <code>Alternativas</code>, <code>Resposta</code> ou o formato <code>Q: / A:</code>.
+              </p>
 
-        <!-- Bloco 2: Importação das Questões -->
-        <div class="panel flex flex-col justify-between">
-          <div>
-            <h3 style="margin:0 0 0.85rem 0; font-size: 1.05rem;">
-              2. Importar Resposta da Adapta
-            </h3>
-            
-            <p class="muted" style="margin: 0 0 0.5rem 0; font-size: 0.8rem;">
-              Cole o texto gerado pela Adapta ONE no campo abaixo. O leitor reconhece o padrão por blocos com <code>Enunciado</code>, <code>Alternativas</code>, <code>Resposta</code> ou o formato <code>Q: / A:</code>.
-            </p>
-
-            <div style="margin-bottom: 0.75rem;">
-              <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-import-raw">
-                Cole aqui as questões geradas pela Adapta *
-              </label>
-              <textarea id="ai-import-raw" class="input" rows="9" style="width: 100%; font-family: monospace; font-size: 0.82rem; resize: vertical;" placeholder="Enunciado: Qual é o prazo para interpor apelação?
+              <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.825rem; font-weight: 600; margin-bottom: 0.25rem;" for="ai-import-raw">
+                  Cole aqui as questões geradas pela Adapta *
+                </label>
+                <textarea id="ai-import-raw" class="input" rows="9" style="width: 100%; font-family: monospace; font-size: 0.82rem; resize: vertical;" placeholder="Enunciado: Qual é o prazo para interpor apelação?
 Alternativas: A) 5 dias  B) 10 dias  C) 15 dias  D) 20 dias
 Resposta: C
 Explicação: Segundo o art. 1.003, § 5º do CPC, o prazo para apelação é de 15 dias úteis.
 Tópico: Recursos Cíveis"></textarea>
+              </div>
+
+              <div id="ai-import-feedback" style="display: none; margin-bottom: 0.75rem; font-size: 0.825rem; padding: 0.6rem; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--border);">
+              </div>
             </div>
 
-            <div id="ai-import-feedback" style="display: none; margin-bottom: 0.75rem; font-size: 0.825rem; padding: 0.6rem; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--border);">
+            <div class="flex justify-between items-center gap-2">
+              <button class="btn btn-primary" id="btn-import-ai-questions" style="width: 100%;" type="button">
+                📥 Importar questões para a prática
+              </button>
             </div>
           </div>
 
-          <div class="flex justify-between items-center gap-2">
-            <button class="btn btn-primary" id="btn-import-ai-questions" style="width: 100%;" type="button">
-              📥 Importar questões para a prática
-            </button>
-          </div>
         </div>
 
-      </div>
+        <!-- Bloco 3: Modo Prática de Questões Importadas da IA -->
+        <div class="panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+            <div>
+              <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🏋️</span> Fila de Questões Importadas com IA
+                <span class="badge" id="ai-pending-badge" style="font-size: 0.75rem;">0 pendentes</span>
+              </h3>
+              <p class="muted" style="margin: 0.2rem 0 0 0; font-size: 0.82rem;">
+                Responda com feedback imediato no cartão, sem popups interruptivos.
+              </p>
+            </div>
 
-      <!-- Bloco 3: Modo Prática -->
-      <div class="panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-          <div>
-            <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span>🏋️</span> Modo Prática com IA
-              <span class="badge" id="ai-pending-badge" style="font-size: 0.75rem;">0 pendentes</span>
-            </h3>
-            <p class="muted" style="margin: 0.2rem 0 0 0; font-size: 0.82rem;">
-              Avalie sua confiança antes de responder. Erros com alta confiança irão automaticamente para o Error Log e Revisões FSRS.
-            </p>
+            <div class="flex gap-2">
+              <select id="ai-filter-subject" class="input" style="font-size: 0.825rem; padding: 0.35rem 0.6rem;">
+                <option value="all">Todas as Matérias</option>
+                <!-- Preenchido dinamicamente -->
+              </select>
+              <button class="btn btn-sm" id="btn-clear-pending-ai" title="Limpar todas as questões pendentes">
+                Limpar pendentes
+              </button>
+            </div>
           </div>
 
-          <div class="flex gap-2">
-            <select id="ai-filter-subject" class="input" style="font-size: 0.825rem; padding: 0.35rem 0.6rem;">
-              <option value="all">Todas as Matérias</option>
-              <!-- Preenchido dinamicamente -->
-            </select>
-            <button class="btn btn-sm" id="btn-clear-pending-ai" title="Limpar todas as questões pendentes">
-              Limpar pendentes
-            </button>
+          <div id="ai-practice-container">
+            <!-- Renderizado dinamicamente -->
           </div>
-        </div>
-
-        <div id="ai-practice-container">
-          <!-- Renderizado dinamicamente -->
         </div>
       </div>
     </section>
@@ -2416,15 +2534,35 @@ Tópico: Recursos Cíveis"></textarea>
               <strong style="font-size:0.85rem; display:block;">Diagnóstico de Armazenamento</strong>
               <span class="muted" style="font-size:0.75rem;">Verifique o funcionamento do localStorage e a contagem de registros salvos</span>
             </div>
-            <button class="btn btn-sm" type="button" id="btn-run-diagnostics">Diagnóstico de dados</button>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button class="btn btn-sm" type="button" id="btn-run-diagnostics">Diagnóstico de dados</button>
+              <button class="btn btn-sm" type="button" id="btn-show-reset-confirmation" style="color:#ef4444; border-color:#fca5a5; background:transparent;">Apagar todos os meus dados</button>
+            </div>
           </div>
           <div id="diagnostics-result" style="display:none; margin-top:0.6rem; padding:0.65rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); font-size:0.8rem; line-height:1.45;"></div>
+          
+          <!-- Confirmação inline explícita (sem confirm nativo) -->
+          <div id="reset-all-confirmation-box" style="display:none; margin-top:0.75rem; padding:0.85rem; background:#fef2f2; border:1px solid #fecaca; border-radius:var(--radius); font-size:0.825rem; color:#991b1b;">
+            <p style="margin:0 0 0.4rem 0; font-weight:700;">
+              ⚠️ Isso apaga matérias, sessões, erros, revisões e preferências. Não pode ser desfeito.
+            </p>
+            <p style="margin:0 0 0.6rem 0; color:#7f1d1d;">
+              Clique no botão de confirmação abaixo para limpar todos os dados do app e recarregar:
+            </p>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm" id="btn-confirm-reset-all" style="background:#dc2626; color:#fff; border-color:#dc2626; font-weight:600;">
+                Sim, apagar tudo permanentemente
+              </button>
+              <button type="button" class="btn btn-sm" id="btn-cancel-reset-all" style="background:#fff; color:#374151; border-color:var(--border);">
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 9. Ações de Gestão de Dados -->
         <div style="margin-bottom: 1.25rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
           <button type="button" class="btn btn-sm" id="btn-pref-load-sample">Carregar dados de exemplo</button>
-          <button type="button" class="btn btn-sm" id="btn-clear-all" style="color:#ef4444;">Reiniciar todos os dados</button>
         </div>
 
         <div class="flex justify-end gap-2">
@@ -2436,28 +2574,7 @@ Tópico: Recursos Cíveis"></textarea>
     </div>
   </div>
 
-  <!-- MODAL: OFERTA DE LEMBRETE AO CONCLUIR TAREFA (Sem Interrupção) -->
-  <div class="modal-backdrop" id="modal-completion-reminder" role="dialog" aria-modal="true" aria-labelledby="comp-rem-title">
-    <div class="modal-box" style="max-width: 480px; text-align: center;">
-      <span style="font-size: 2.2rem; display: block; margin-bottom: 0.4rem;">🎉</span>
-      <h3 id="comp-rem-title" style="margin: 0 0 0.5rem 0;">Etapa Concluída com Sucesso!</h3>
-      <p style="margin: 0 0 1rem 0; font-size: 0.9rem;" id="completion-summary-text">
-        Hoje: 1 sessão finalizada. Ótimo trabalho de foco!
-      </p>
 
-      <div style="background: var(--bg); padding: 0.75rem; border-radius: var(--radius); margin-bottom: 1rem; text-align: left; font-size: 0.85rem; border: 1px solid var(--border);">
-        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-          <input type="checkbox" id="chk-schedule-next-reminder" checked>
-          <span>Criar lembrete único para amanhã: <strong>"Continuar próximas revisões (~15 min)"</strong></span>
-        </label>
-      </div>
-
-      <div class="flex gap-2 justify-center">
-        <button class="btn btn-modal-close" data-modal="modal-completion-reminder" type="button">Agora não</button>
-        <button class="btn btn-primary" type="button" id="btn-confirm-completion-reminder">Confirmar e Fechar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- Toast Notification Container com aria-live para acessibilidade -->
   <div id="toast-container" role="status" aria-live="polite"></div>
@@ -2508,6 +2625,544 @@ Tópico: Recursos Cíveis"></textarea>
     // FSRS Intervals: 1 dia -> 3 dias -> 7 dias -> 14 dias -> 30 dias
     const FSRS_INTERVALS = [1, 3, 7, 14, 30];
 
+    // BANCO EMBUTIDO DE QUESTÕES - MATRIZ DE DIREITO UNESC COLATINA (58 DISCIPLINAS, 6 CATEGORIAS)
+    // Questões autorais de diagnóstico em formato Certo/Errado (estilo Cebraspe)
+    const UNESC_QUESTION_BANK = [
+      // 1. Fundamentos e formação transversal (17 disciplinas)
+      {
+        id: 'unesc-1',
+        discipline: 'AEED-IG: Indivíduo, Sociedade e Mercado',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A interação entre indivíduo, sociedade e mercado no Estado Democrático de Direito subordina a ordem econômica aos ditames da justiça social e aos direitos fundamentais.',
+        correct: 'CERTO',
+        explanation: 'A ordem econômica constitucional (art. 170 da CF) funda-se na valorização do trabalho humano e na livre iniciativa, tendo por fim assegurar a todos existência digna, conforme os ditames da justiça social.',
+        legalRef: 'Art. 170, caput, CF/88'
+      },
+      {
+        id: 'unesc-2',
+        discipline: 'AEED-IG: Coleta e Tratamento de Dados',
+        category: 'Fundamentos e formação transversal',
+        statement: 'Na coleta e no tratamento de dados para fins analíticos ou de mercado, a finalidade legítima e informada ao titular constitui princípio norteador essencial da conformidade legal.',
+        correct: 'CERTO',
+        explanation: 'O princípio da finalidade (art. 6º, I, da LGPD) exige realização do tratamento para propósitos legítimos, específicos, explícitos e informados ao titular, sem possibilidade de tratamento posterior incompatível.',
+        legalRef: 'Art. 6º, I, Lei 13.709/2018 (LGPD)'
+      },
+      {
+        id: 'unesc-3',
+        discipline: 'AEED-IG: Comportamento Organizacional',
+        category: 'Fundamentos e formação transversal',
+        statement: 'O assédio moral no ambiente corporativo e profissional é conduta tolerada pela ordem jurídica trabalhista caso o empregado alcance suas metas de produtividade.',
+        correct: 'ERRADO',
+        explanation: 'O assédio moral viola a dignidade da pessoa humana e a integridade psicofísica do trabalhador (arts. 1º, III, e 5º, X, da CF), ensejando reparação civil e rescisão indireta do contrato de trabalho.',
+        legalRef: 'Arts. 1º, III, 5º, X, CF/88 e 483 da CLT'
+      },
+      {
+        id: 'unesc-4',
+        discipline: 'AEED-IG: Inovação e Mercado',
+        category: 'Fundamentos e formação transversal',
+        statement: 'O Marco Legal das Startups e da Inovação afasta integralmente a aplicação de quaisquer normas de direito concorrencial no mercado brasileiro.',
+        correct: 'ERRADO',
+        explanation: 'O Marco Legal das Startups (LC 182/2021) incentiva o empreendedorismo inovador e modelos regulatórios experimentais (sandbox), mas não suspende nem revoga a legislação de defesa da concorrência (Lei 12.529/2011).',
+        legalRef: 'LC 182/2021 e Lei 12.529/2011'
+      },
+      {
+        id: 'unesc-5',
+        discipline: 'AEED-IG: Inovação Social',
+        category: 'Fundamentos e formação transversal',
+        statement: 'Iniciativas de inovação social e terceiro setor podem estabelecer parcerias com o poder público mediante termos de colaboração e fomento regidos por marco regulatório próprio.',
+        correct: 'CERTO',
+        explanation: 'A Lei 13.019/2014 (MROSC) disciplina o regime jurídico das parcerias entre a administração pública e as organizações da sociedade civil em mútua cooperação para finalidades de interesse público.',
+        legalRef: 'Lei 13.019/2014 (MROSC)'
+      },
+      {
+        id: 'unesc-6',
+        discipline: 'AEED-IG: Normatividade Social',
+        category: 'Fundamentos e formação transversal',
+        statement: 'As normas morais e as normas jurídicas possuem como elemento distintivo comum a coerção estatal direta em caso de descumprimento espontâneo.',
+        correct: 'ERRADO',
+        explanation: 'A coercibilidade estatal formal (possibilidade de constrangimento legítimo pelo aparato do Estado) é traço privativo das normas jurídicas, não integrando a estrutura sancionatória da moral.',
+        legalRef: 'Teoria Geral do Direito / Kelsen'
+      },
+      {
+        id: 'unesc-7',
+        discipline: 'AEED-IG: Oportunidade e Resultado',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A gestão estratégica de resultados na advocacia e na assessoria jurídica pode dispensar a estrita observância das regras deontológicas em favor do lucro financeiro.',
+        correct: 'ERRADO',
+        explanation: 'O exercício da advocacia subordina-se incondicionalmente ao Estatuto da OAB e ao Código de Ética e Disciplina, sendo vedada a mercantilização da profissão.',
+        legalRef: 'Arts. 1º e 5º do Código de Ética e Disciplina da OAB'
+      },
+      {
+        id: 'unesc-8',
+        discipline: 'AEED-IG: Projeto Integrador',
+        category: 'Fundamentos e formação transversal',
+        statement: 'O projeto integrador no ensino jurídico visa articular conhecimentos dogmáticos, pesquisa empírica e resolução fundamentada de problemas reais da comunidade.',
+        correct: 'CERTO',
+        explanation: 'As Diretrizes Curriculares Nacionais do curso de Direito (Resolução CNE/CES nº 5/2018) preconizam a integração interdisciplinar entre ensino, pesquisa, extensão e prática social.',
+        legalRef: 'Resolução CNE/CES 5/2018'
+      },
+      {
+        id: 'unesc-9',
+        discipline: 'Ciência Política e Teoria do Estado',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A independência dos poderes exclui todo mecanismo de controle recíproco.',
+        correct: 'ERRADO',
+        explanation: 'A separação dos poderes organiza-se no sistema de freios e contrapesos (checks and balances), onde cada poder exerce funções típicas e controle constitucional recíproco sobre os demais.',
+        legalRef: 'Art. 2º da CF/88 e Teoria de Montesquieu'
+      },
+      {
+        id: 'unesc-10',
+        discipline: 'Comunicação e Expressão',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A clareza, concisão e adequação técnica da linguagem jurídica em petições constituem dever funcional que facilita o acesso do jurisdicionado e a celeridade processual.',
+        correct: 'CERTO',
+        explanation: 'O CPC e as regras de modernização do Judiciário (Visual Law e linguagem simples) preconizam redação objetiva e inteligível para garantia do devido processo legal e cooperação.',
+        legalRef: 'Arts. 4º, 6º e 8º do CPC'
+      },
+      {
+        id: 'unesc-11',
+        discipline: 'Direitos Humanos',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A Constituição admite, como regra, provas obtidas por meios ilícitos.',
+        correct: 'ERRADO',
+        explanation: 'A Constituição Federal de 1988 declara expressamente que "são inadmissíveis, no processo, as provas obtidas por meios ilícitos".',
+        legalRef: 'Art. 5º, LVI, CF/88'
+      },
+      {
+        id: 'unesc-12',
+        discipline: 'Ética',
+        category: 'Fundamentos e formação transversal',
+        statement: 'O diploma de Direito, sozinho, basta para a inscrição como advogado.',
+        correct: 'ERRADO',
+        explanation: 'Para a inscrição no quadro de advogados da OAB, exige-se diploma, aprovação em Exame de Ordem e demais requisitos formais de idoneidade e capacidade civil.',
+        legalRef: 'Art. 8º da Lei 8.906/94 (EAOAB)'
+      },
+      {
+        id: 'unesc-13',
+        discipline: 'Filosofia Geral e do Direito',
+        category: 'Fundamentos e formação transversal',
+        statement: 'Para o juspositivismo kelseniano estrito, a validade jurídica de uma norma decorre de sua correspondência a critérios universais de justiça transcendente e moralidade.',
+        correct: 'ERRADO',
+        explanation: 'Na Teoria Pura do Direito de Hans Kelsen, a validade de uma norma provém de sua conformidade formal com uma norma superior no ordenamento positivo, desvinculada de juízos de justiça moral.',
+        legalRef: 'Teoria Pura do Direito (Hans Kelsen)'
+      },
+      {
+        id: 'unesc-14',
+        discipline: 'Hermenêutica e Argumentação Jurídica',
+        category: 'Fundamentos e formação transversal',
+        statement: 'Pode-se criar um novo crime apenas por analogia desfavorável ao acusado.',
+        correct: 'ERRADO',
+        explanation: 'A analogia in malam partem é terminantemente vedada no direito penal brasileiro pelo postulado estrito da legalidade e tipicidade.',
+        legalRef: 'Art. 5º, XXXIX, CF e art. 1º do Código Penal'
+      },
+      {
+        id: 'unesc-15',
+        discipline: 'História e Teoria do Direito',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A codificação moderna oitocentista, como o Código Civil Francês de 1804 (Código Napoleônico), buscou unificar o direito superando a dispersão e o pluralismo de fontes do Antigo Regime.',
+        correct: 'CERTO',
+        explanation: 'O movimento de codificação racionalista pretendia concentrar na lei escrita a fonte primária e exaustiva do direito, rompendo com os forais e costumes locais feudais.',
+        legalRef: 'História do Direito e Movimento da Codificação'
+      },
+      {
+        id: 'unesc-16',
+        discipline: 'Introdução ao Estudo do Direito',
+        category: 'Fundamentos e formação transversal',
+        statement: 'Uma lei penal posterior que favoreça o agente pode alcançar fatos anteriores.',
+        correct: 'CERTO',
+        explanation: 'A lei penal não retroagirá, salvo para beneficiar o réu (lex mitior / retroatividade benéfica).',
+        legalRef: 'Art. 5º, XL, da CF e art. 2º, parágrafo único, do CP'
+      },
+      {
+        id: 'unesc-17',
+        discipline: 'Sociodiversidade e Multiculturalismo',
+        category: 'Fundamentos e formação transversal',
+        statement: 'A Constituição Federal de 1988 reconhece aos povos indígenas seus costumes, línguas, crenças e tradições, e os direitos originários sobre as terras que tradicionalmente ocupam.',
+        correct: 'CERTO',
+        explanation: 'O art. 231 da Constituição consagra o pluralismo cultural e a proteção dos direitos originários das comunidades indígenas.',
+        legalRef: 'Art. 231 da CF/88'
+      },
+
+      // 2. Direito público (10 disciplinas)
+      {
+        id: 'unesc-18',
+        discipline: 'Direito Administrativo I',
+        category: 'Direito público',
+        statement: 'A atuação administrativa está sujeita ao princípio da impessoalidade.',
+        correct: 'CERTO',
+        explanation: 'A administração pública direta e indireta de qualquer dos Poderes obedece aos princípios da legalidade, impessoalidade, moralidade, publicidade e eficiência.',
+        legalRef: 'Art. 37, caput, CF/88'
+      },
+      {
+        id: 'unesc-19',
+        discipline: 'Direito Administrativo II',
+        category: 'Direito público',
+        statement: 'Anular um ato por ilegalidade e revogá-lo por conveniência são operações juridicamente idênticas.',
+        correct: 'ERRADO',
+        explanation: 'A anulação baseia-se em vício de legalidade (efeitos retroativos ex tunc), enquanto a revogação decorre de juízo de conveniência e oportunidade da Administração (efeitos prospectivos ex nunc).',
+        legalRef: 'Art. 53 da Lei 9.784/99 e Súmulas 346 e 473 do STF'
+      },
+      {
+        id: 'unesc-20',
+        discipline: 'Direito Ambiental',
+        category: 'Direito público',
+        statement: 'A existência de licença elimina automaticamente qualquer discussão sobre dano ambiental causado pela atividade.',
+        correct: 'ERRADO',
+        explanation: 'A responsabilidade por dano ambiental é objetiva e integral (art. 225, § 3º, CF). A regularidade da licença ambiental não exime o poluidor do dever civil de indenizar ou reparar o dano causado.',
+        legalRef: 'Art. 225, § 3º, CF e Lei 6.938/1981'
+      },
+      {
+        id: 'unesc-21',
+        discipline: 'Direito Constitucional I',
+        category: 'Direito público',
+        statement: 'A Constituição declara Legislativo, Executivo e Judiciário poderes independentes e harmônicos entre si.',
+        correct: 'CERTO',
+        explanation: 'São Poderes da União, independentes e harmônicos entre si, o Legislativo, o Executivo e o Judiciário.',
+        legalRef: 'Art. 2º da CF/88'
+      },
+      {
+        id: 'unesc-22',
+        discipline: 'Direito Constitucional II',
+        category: 'Direito público',
+        statement: 'A criação, a incorporação, a fusão e o desmembramento de Municípios independem de consulta prévia às populações dos Municípios envolvidos.',
+        correct: 'ERRADO',
+        explanation: 'A criação ou fusão de municípios far-se-á por lei estadual e dependerá de consulta prévia, mediante plebiscito, às populações dos Municípios envolvidos.',
+        legalRef: 'Art. 18, § 4º, CF/88'
+      },
+      {
+        id: 'unesc-23',
+        discipline: 'Direito Constitucional III',
+        category: 'Direito público',
+        statement: 'A regra constitucional de ingresso em cargo público é a prévia aprovação em concurso, ressalvadas as exceções previstas na Constituição.',
+        correct: 'CERTO',
+        explanation: 'A investidura em cargo ou emprego público depende de aprovação prévia em concurso público de provas ou de provas e títulos, ressalvadas as nomeações para cargo em comissão declarado em lei de livre nomeação e exoneração.',
+        legalRef: 'Art. 37, II, CF/88'
+      },
+      {
+        id: 'unesc-24',
+        discipline: 'Direito da Seguridade Social',
+        category: 'Direito público',
+        statement: 'Saúde, previdência e assistência social são dimensões da seguridade social constitucional.',
+        correct: 'CERTO',
+        explanation: 'A seguridade social compreende um conjunto integrado de ações de iniciativa dos Poderes Públicos e da sociedade, destinadas a assegurar os direitos relativos à saúde, à previdência e à assistência social.',
+        legalRef: 'Art. 194 da CF/88'
+      },
+      {
+        id: 'unesc-25',
+        discipline: 'Direito Digital, Tecnologia e Inovação',
+        category: 'Direito público',
+        statement: 'Toda hipótese legal de tratamento de dados pessoais depende obrigatoriamente do consentimento do titular.',
+        correct: 'ERRADO',
+        explanation: 'A LGPD prevê diversas bases legais autônomas além do consentimento, como cumprimento de obrigação legal ou regulatória, execução de contrato, legítimo interesse e proteção do crédito.',
+        legalRef: 'Art. 7º da Lei 13.709/2018 (LGPD)'
+      },
+      {
+        id: 'unesc-26',
+        discipline: 'Direito Financeiro e Tributário',
+        category: 'Direito público',
+        statement: 'Imposto e taxa são nomes intercambiáveis para uma mesma espécie de tributo.',
+        correct: 'ERRADO',
+        explanation: 'Impostos e taxas são espécies tributárias distintas: os impostos são tributos não vinculados a contraprestação específica estatal, enquanto as taxas pressupõem exercício regular do poder de polícia ou utilização de serviço público específico e divisível.',
+        legalRef: 'Arts. 16 e 77 do Código Tributário Nacional'
+      },
+      {
+        id: 'unesc-27',
+        discipline: 'Direito Internacional',
+        category: 'Direito público',
+        statement: 'Todo tratado internacional de direitos humanos, independentemente do procedimento de aprovação, equivale a emenda constitucional.',
+        correct: 'ERRADO',
+        explanation: 'Apenas os tratados e convenções internacionais sobre direitos humanos aprovados em cada Casa do Congresso Nacional, em dois turnos, por três quintos dos votos, equivalem às emendas constitucionais.',
+        legalRef: 'Art. 5º, § 3º, da CF/88'
+      },
+
+      // 3. Direito civil, empresarial e consumo (12 disciplinas)
+      {
+        id: 'unesc-28',
+        discipline: 'Contratos em Espécie',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'Compra e venda e locação devem ser classificadas como o mesmo tipo contratual apenas porque ambas são contratos.',
+        correct: 'ERRADO',
+        explanation: 'Compra e venda e locação constituem contratos típicos de natureza e efeitos jurídicos inconfundíveis: a compra e venda transfere o domínio da coisa (art. 481 CC), enquanto a locação cede apenas o uso e gozo temporário (art. 565 CC).',
+        legalRef: 'Arts. 481 e 565 do Código Civil'
+      },
+      {
+        id: 'unesc-29',
+        discipline: 'Direito Civil I (Teoria Geral)',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'A personalidade civil da pessoa começa do nascimento com vida, ressalvada a proteção legal aos direitos do nascituro.',
+        correct: 'CERTO',
+        explanation: 'A personalidade civil da pessoa começa do nascimento com vida; mas a lei põe a salvo, desde a concepção, os direitos do nascituro.',
+        legalRef: 'Art. 2º do Código Civil'
+      },
+      {
+        id: 'unesc-30',
+        discipline: 'Direito Civil II (Obrigações)',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'A solidariedade entre devedores é sempre presumida.',
+        correct: 'ERRADO',
+        explanation: 'A solidariedade não se presume; resulta da lei ou da vontade das partes.',
+        legalRef: 'Art. 265 do Código Civil'
+      },
+      {
+        id: 'unesc-31',
+        discipline: 'Direito Civil III (Contratos)',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'As partes estão dispensadas de observar a boa-fé na execução contratual.',
+        correct: 'ERRADO',
+        explanation: 'Os contratantes são obrigados a guardar, assim na conclusão do contrato, como em sua execução, os princípios de probidade e a boa-fé.',
+        legalRef: 'Art. 422 do Código Civil'
+      },
+      {
+        id: 'unesc-32',
+        discipline: 'Direito Civil IV (Direitos Reais)',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'Todo possuidor de um bem é necessariamente seu proprietário.',
+        correct: 'ERRADO',
+        explanation: 'A posse é situação fática de exercício de algum dos poderes inerentes à propriedade (art. 1.196 CC), existindo comumente possuidores diretos que não são donos (como locatários e comodatários).',
+        legalRef: 'Arts. 1.196 e 1.197 do Código Civil'
+      },
+      {
+        id: 'unesc-33',
+        discipline: 'Direito Civil V (Família)',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'Todo casamento adota obrigatoriamente o mesmo regime de bens.',
+        correct: 'ERRADO',
+        explanation: 'Vige no direito civil a autonomia de escolha pelo pacto antenupcial (comunhão parcial, comunhão universal, separação de bens ou participação final nos aquestos), salvo casos de separação obrigatória prevista em lei.',
+        legalRef: 'Art. 1.639 do Código Civil'
+      },
+      {
+        id: 'unesc-34',
+        discipline: 'Direito Civil VI (Sucessões)',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'Com a abertura da sucessão, a herança transmite-se desde logo aos herdeiros legítimos e testamentários.',
+        correct: 'CERTO',
+        explanation: 'Pelo princípio da saisine, aberta a sucessão, a herança transmite-se, desde logo, aos herdeiros legítimos e testamentários.',
+        legalRef: 'Art. 1.784 do Código Civil'
+      },
+      {
+        id: 'unesc-35',
+        discipline: 'Direito Empresarial I',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'O exercício profissional de atividade econômica organizada é elemento da definição legal de empresário.',
+        correct: 'CERTO',
+        explanation: 'Considera-se empresário quem exerce profissionalmente atividade econômica organizada para a produção ou a circulação de bens ou de serviços.',
+        legalRef: 'Art. 966 do Código Civil'
+      },
+      {
+        id: 'unesc-36',
+        discipline: 'Direito Empresarial II',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'Uma sociedade limitada pode ter seu capital dividido em quotas.',
+        correct: 'CERTO',
+        explanation: 'Na sociedade limitada, a responsabilidade de cada sócio é restrita ao valor de suas quotas, mas todos respondem solidariamente pela integralização do capital social.',
+        legalRef: 'Art. 1.052 do Código Civil'
+      },
+      {
+        id: 'unesc-37',
+        discipline: 'Direito Falimentar e Recuperação de Empresas',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'A recuperação judicial busca viabilizar a superação da crise econômico-financeira do devedor.',
+        correct: 'CERTO',
+        explanation: 'A recuperação judicial tem por objetivo viabilizar a superação da situação de crise econômico-financeira do devedor, a fim de permitir a manutenção da fonte produtora e do emprego dos trabalhadores.',
+        legalRef: 'Art. 47 da Lei 11.101/2005'
+      },
+      {
+        id: 'unesc-38',
+        discipline: 'Relações Sociais e Consumo',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'O CDC define consumidor, em sua regra geral, como quem adquire ou utiliza produto ou serviço como destinatário final.',
+        correct: 'CERTO',
+        explanation: 'Consumidor é toda pessoa física ou jurídica que adquire ou utiliza produto ou serviço como destinatário final (teoria finalista mitigada pela jurisprudência).',
+        legalRef: 'Art. 2º do Código de Defesa do Consumidor'
+      },
+      {
+        id: 'unesc-39',
+        discipline: 'Responsabilidade Civil',
+        category: 'Direito civil, empresarial e consumo',
+        statement: 'A configuração de responsabilidade civil nunca exige exame de dano.',
+        correct: 'ERRADO',
+        explanation: 'O dano (patrimonial ou moral) é pressuposto nuclear e indispensável de qualquer dever de indenizar no direito civil brasileiro (arts. 186 e 927 do CC). Sem dano, inexiste indenização.',
+        legalRef: 'Arts. 186 e 927 do Código Civil'
+      },
+
+      // 4. Direito penal (4 disciplinas)
+      {
+        id: 'unesc-40',
+        discipline: 'Direito Penal I',
+        category: 'Direito penal',
+        statement: 'Pode haver crime sem lei anterior que o defina.',
+        correct: 'ERRADO',
+        explanation: 'Não há crime sem lei anterior que o defina, nem pena sem prévia cominação legal (princípio da anterioridade da lei penal).',
+        legalRef: 'Art. 1º do Código Penal e art. 5º, XXXIX, da CF'
+      },
+      {
+        id: 'unesc-41',
+        discipline: 'Direito Penal II',
+        category: 'Direito penal',
+        statement: 'Lei penal posterior favorável ao agente jamais se aplica a fato anterior.',
+        correct: 'ERRADO',
+        explanation: 'A lei posterior, que de qualquer modo favorecer o agente, aplica-se aos fatos anteriores, ainda que decididos por sentença condenatória transitada em julgado.',
+        legalRef: 'Art. 2º, parágrafo único, do Código Penal'
+      },
+      {
+        id: 'unesc-42',
+        discipline: 'Direito Penal III',
+        category: 'Direito penal',
+        statement: 'Nos crimes contra a pessoa, o homicídio praticado mediante paga ou promessa de recompensa qualifica o delito.',
+        correct: 'CERTO',
+        explanation: 'O homicídio cometido mediante paga ou promessa de recompensa, ou por outro motivo torpe, configura homicídio qualificado (pena de reclusão de doze a trinta anos).',
+        legalRef: 'Art. 121, § 2º, I, do Código Penal'
+      },
+      {
+        id: 'unesc-43',
+        discipline: 'Direito Penal IV',
+        category: 'Direito penal',
+        statement: 'O crime de peculato exige necessariamente que o sujeito ativo seja funcionário público ou a ele equiparado para fins penais.',
+        correct: 'CERTO',
+        explanation: 'O peculato é crime próprio contra a administração pública, praticado por funcionário público que se apropria de dinheiro ou bem móvel público ou particular em razão do cargo.',
+        legalRef: 'Art. 312 do Código Penal'
+      },
+
+      // 5. Processo e prática (13 disciplinas)
+      {
+        id: 'unesc-44',
+        discipline: 'Direito Processual Civil I',
+        category: 'Processo e prática',
+        statement: 'A cooperação entre sujeitos do processo é estranha ao CPC de 2015.',
+        correct: 'ERRADO',
+        explanation: 'Todos os sujeitos do processo devem cooperar entre si para que se obtenha, em tempo razoável, decisão de mérito justa e efetiva.',
+        legalRef: 'Art. 6º do CPC/2015'
+      },
+      {
+        id: 'unesc-45',
+        discipline: 'Direito Processual Civil II',
+        category: 'Processo e prática',
+        statement: 'O ônus da prova dispensa qualquer consideração sobre quais fatos fundamentam pedido e defesa.',
+        correct: 'ERRADO',
+        explanation: 'O ônus da prova incumbe ao autor, quanto ao fato constitutivo de seu direito, e ao réu, quanto à existência de fato impeditivo, modificativo ou extintivo do direito do autor.',
+        legalRef: 'Art. 373 do CPC/2015'
+      },
+      {
+        id: 'unesc-46',
+        discipline: 'Direito Processual Civil III',
+        category: 'Processo e prática',
+        statement: 'A tutela de urgência prescinde, como regra, de probabilidade do direito e perigo de dano.',
+        correct: 'ERRADO',
+        explanation: 'A tutela de urgência será concedida quando houver elementos que evidenciem a probabilidade do direito e o perigo de dano ou o risco ao resultado útil do processo.',
+        legalRef: 'Art. 300 do CPC/2015'
+      },
+      {
+        id: 'unesc-47',
+        discipline: 'Direito Processual Civil IV',
+        category: 'Processo e prática',
+        statement: 'Na execução por quantia certa, a penhora deve recair preferencialmente sobre dinheiro em espécie ou em depósito em instituição financeira.',
+        correct: 'CERTO',
+        explanation: 'O art. 835, I, do CPC estabelece o dinheiro como o primeiro item na ordem de preferência legal para penhora.',
+        legalRef: 'Art. 835, I, do CPC/2015'
+      },
+      {
+        id: 'unesc-48',
+        discipline: 'Direito Processual Civil V',
+        category: 'Processo e prática',
+        statement: 'A apelação é o recurso cabível contra sentença, ressalvadas as particularidades legais.',
+        correct: 'CERTO',
+        explanation: 'Da sentença cabe apelação, cabendo o prazo geral de 15 dias úteis para a sua interposição perante o juízo de primeiro grau.',
+        legalRef: 'Art. 1.009 do CPC/2015'
+      },
+      {
+        id: 'unesc-49',
+        discipline: 'Direito Processual Penal I',
+        category: 'Processo e prática',
+        statement: 'Prova obtida por meio ilícito é admissível apenas por ser relevante à acusação.',
+        correct: 'ERRADO',
+        explanation: 'São inadmissíveis, devendo ser desentranhadas do processo, as provas ilícitas, assim entendidas as obtidas em violação a normas constitucionais ou legais.',
+        legalRef: 'Art. 157 do Código de Processo Penal'
+      },
+      {
+        id: 'unesc-50',
+        discipline: 'Direito Processual Penal II',
+        category: 'Processo e prática',
+        statement: 'A sentença penal pode omitir os motivos de fato e de direito da decisão.',
+        correct: 'ERRADO',
+        explanation: 'A sentença conterá os motivos de fato e de direito em que se fundar a decisão, sob pena de nulidade absoluta por violação ao dever constitucional de fundamentação.',
+        legalRef: 'Art. 381 do CPP e art. 93, IX, da CF'
+      },
+      {
+        id: 'unesc-51',
+        discipline: 'Direito Processual Trabalhista',
+        category: 'Processo e prática',
+        statement: 'A CLT prevê hipóteses de recurso ordinário.',
+        correct: 'CERTO',
+        explanation: 'Cabe Recurso Ordinário para a instância superior das decisões definitivas ou terminativas das Varas do Trabalho no prazo de 8 dias.',
+        legalRef: 'Art. 895 da CLT'
+      },
+      {
+        id: 'unesc-52',
+        discipline: 'Formas Consensuais de Solução de Conflitos',
+        category: 'Processo e prática',
+        statement: 'A arbitragem alcança, em regra, direitos patrimoniais disponíveis.',
+        correct: 'CERTO',
+        explanation: 'As pessoas capazes de contratar poderão valer-se da arbitragem para dirimir litígios relativos a direitos patrimoniais disponíveis.',
+        legalRef: 'Art. 1º da Lei 9.307/1996 (Lei de Arbitragem)'
+      },
+      {
+        id: 'unesc-53',
+        discipline: 'Prática Jurídica Simulada I',
+        category: 'Processo e prática',
+        statement: 'Uma petição inicial pode ser preparada sem identificar os fatos e os fundamentos jurídicos do pedido.',
+        correct: 'ERRADO',
+        explanation: 'A petição inicial indicará o fato e os fundamentos jurídicos do pedido (causa de pedir remota e próxima), requisito estrito de admissibilidade.',
+        legalRef: 'Art. 319, III, do CPC/2015'
+      },
+      {
+        id: 'unesc-54',
+        discipline: 'Prática Jurídica Simulada II',
+        category: 'Processo e prática',
+        statement: 'Na elaboração de peça de defesa em processo penal, a resposta à acusação permite arguir preliminares, suscitar excludentes e arrolar testemunhas.',
+        correct: 'CERTO',
+        explanation: 'Na resposta à acusação, o acusado poderá arguir preliminares e alegar tudo o que interesse à sua defesa, oferecer documentos, justificar e arrolar testemunhas.',
+        legalRef: 'Art. 396-A do Código de Processo Penal'
+      },
+      {
+        id: 'unesc-55',
+        discipline: 'Teoria Geral do Processo',
+        category: 'Processo e prática',
+        statement: 'Contraditório significa que somente o autor pode se manifestar no processo.',
+        correct: 'ERRADO',
+        explanation: 'O contraditório (art. 5º, LV, da CF e arts. 9º e 10 do CPC) assegura informação e oportunidade de manifestação a ambas as partes, proibindo decisões-surpresa.',
+        legalRef: 'Art. 5º, LV, da CF e arts. 9º e 10 do CPC'
+      },
+      {
+        id: 'unesc-56',
+        discipline: 'Tópicos Especiais em Processo',
+        category: 'Processo e prática',
+        statement: 'Embargos de declaração podem servir para apontar omissão em decisão judicial.',
+        correct: 'CERTO',
+        explanation: 'Cabem embargos de declaração contra qualquer decisão judicial para esclarecer obscuridade, eliminar contradição, suprir omissão ou corrigir erro material.',
+        legalRef: 'Art. 1.022 do CPC/2015'
+      },
+
+      // 6. Direito do trabalho (2 disciplinas)
+      {
+        id: 'unesc-57',
+        discipline: 'Direito do Trabalho I',
+        category: 'Direito do trabalho',
+        statement: 'Todo empregado terá direito anualmente ao gozo de um período de férias, sem prejuízo da remuneração.',
+        correct: 'CERTO',
+        explanation: 'Todo empregado terá direito anualmente ao gozo de um período de férias, sem prejuízo da remuneração, acrescido de pelo menos um terço constitucional.',
+        legalRef: 'Art. 129 da CLT e art. 7º, XVII, da CF'
+      },
+      {
+        id: 'unesc-58',
+        discipline: 'Direito do Trabalho II',
+        category: 'Direito do trabalho',
+        statement: 'Ato de improbidade pode constituir justa causa para rescisão pelo empregador.',
+        correct: 'CERTO',
+        explanation: 'Constituem justa causa para rescisão do contrato de trabalho pelo empregador: ato de improbidade, incontinência de conduta ou mau procedimento, entre outros.',
+        legalRef: 'Art. 482, alínea a, da CLT'
+      }
+    ];
+
     // Dicas de evidência para carrossel
     const EVIDENCE_TIPS = [
       {
@@ -2535,6 +3190,23 @@ Tópico: Recursos Cíveis"></textarea>
         body: "Estudos de neurociência comprovam que exercícios aeróbicos moderados feitos 4 horas após aprender liberam dopamina, noradrenalina e BDNF na janela exata da consolidação da memória."
       }
     ];
+
+    // Estado inicial completamente vazio para novos usuários
+    function getEmptyData() {
+      return {
+        subjects: [],
+        schedule: [],
+        sessions: [],
+        errors: [],
+        reviews: [],
+        aiQuestions: [],
+        ideas: [],
+        captureHistory: [],
+        bankStats: {},
+        resumedState: null,
+        dailyLog: { reviews: 0, studyMinutes: 0, questions: 0 }
+      };
+    }
 
     // Modelo de Dados Padrão (Exemplo Fictício de Direito)
     function getDefaultData() {
@@ -2797,17 +3469,18 @@ Tópico: Recursos Cíveis"></textarea>
             if (!Array.isArray(parsed.aiQuestions)) parsed.aiQuestions = [];
             if (!Array.isArray(parsed.ideas)) parsed.ideas = [];
             if (!Array.isArray(parsed.captureHistory)) parsed.captureHistory = [];
+            if (!parsed.bankStats || typeof parsed.bankStats !== 'object') parsed.bankStats = {};
             if (!parsed.resumedState) parsed.resumedState = null;
             if (!parsed.dailyLog) parsed.dailyLog = { reviews: 0, studyMinutes: 0, questions: 0 };
             this.data = parsed;
           } else {
-            const initial = getDefaultData();
-            this.data = initial;
+            // Novo usuário começa com estado 100% limpo
+            this.data = getEmptyData();
             this.save();
           }
         } catch (e) {
           console.error("Falha ao ler dados do localStorage:", e);
-          this.data = getDefaultData();
+          this.data = getEmptyData();
         }
 
         // Carrega preferências
@@ -2969,14 +3642,24 @@ Tópico: Recursos Cíveis"></textarea>
 
           safeAddListener('btn-load-sample', 'click', () => this.loadSampleData());
           safeAddListener('btn-pref-load-sample', 'click', () => this.loadSampleData());
-          safeAddListener('btn-clear-all', 'click', () => this.clearAllData());
+
+          // Controle da confirmação inline "Apagar todos os meus dados"
+          safeAddListener('btn-show-reset-confirmation', 'click', () => {
+            const box = document.getElementById('reset-all-confirmation-box');
+            if (box) box.style.display = 'block';
+          });
+          safeAddListener('btn-cancel-reset-all', 'click', () => {
+            const box = document.getElementById('reset-all-confirmation-box');
+            if (box) box.style.display = 'none';
+          });
+          safeAddListener('btn-confirm-reset-all', 'click', () => this.resetAllDataAndStorage());
         } catch (err) {
           console.error('[MODULO PREFERÊNCIAS]:', err);
         }
       }
 
-      loadSampleData() {
-        if (confirm('Deseja carregar os dados de exemplo de Direito? Suas alterações serão substituídas.')) {
+      loadSampleData(skipConfirm = false) {
+        if (skipConfirm || confirm('Deseja carregar os dados de exemplo de Direito? Suas alterações serão substituídas.')) {
           this.data = getDefaultData();
           this.saveData();
           this.renderAll();
@@ -2984,12 +3667,19 @@ Tópico: Recursos Cíveis"></textarea>
         }
       }
 
-      clearAllData() {
-        if (confirm('Tem certeza que deseja apagar todos os dados cadastrados?')) {
-          this.data = { subjects: [], schedule: [], sessions: [], errors: [], reviews: [], aiQuestions: [], ideas: [], captureHistory: [] };
-          this.saveData();
-          this.renderAll();
-          this.toast('Todos os dados foram reiniciados.');
+      resetAllDataAndStorage() {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(PREFS_KEY);
+          LEGACY_STORAGE_KEYS.forEach(k => {
+            try { localStorage.removeItem(k); } catch (e) {}
+          });
+          window.location.reload();
+        } catch (e) {
+          console.error('Erro ao resetar dados:', e);
+          this.data = getEmptyData();
+          this.save();
+          window.location.reload();
         }
       }
 
@@ -3008,6 +3698,11 @@ Tópico: Recursos Cíveis"></textarea>
 
       initDashboardModule() {
         try {
+          safeAddListener('btn-welcome-first-subject', 'click', () => {
+            this.switchTab('tab-subjects');
+            this.openModal('modal-subject');
+          });
+          safeAddListener('btn-welcome-load-sample', 'click', () => this.loadSampleData(true));
           safeAddListener('btn-next-step-primary', 'click', () => this.startOrResumeNextStep());
           safeAddListener('btn-toggle-secondary-suggestions', 'click', () => {
             const box = document.getElementById('secondary-suggestions-container');
@@ -3200,6 +3895,63 @@ Tópico: Recursos Cíveis"></textarea>
 
       initAiExercisesModule() {
         try {
+          this.currentBankIndex = 0;
+          this.currentBankFilterCategory = 'all';
+          this.currentBankFilterDiscipline = 'all';
+
+          // Toggle entre Banco de Questões (padrão) e Gerar com IA
+          safeAddListener('subtab-btn-bank', 'click', () => this.switchExercisesSubtab('bank'));
+          safeAddListener('subtab-btn-ai', 'click', () => this.switchExercisesSubtab('ai'));
+
+          // Seletor e filtros do Banco UNESC
+          safeAddListener('bank-filter-category', 'change', (e) => {
+            this.currentBankFilterCategory = e.target.value;
+            this.populateBankDisciplinesDropdown();
+            this.currentBankIndex = 0;
+            this.renderBankQuestion();
+            this.renderBankStats();
+          });
+
+          safeAddListener('bank-filter-discipline', 'change', (e) => {
+            this.currentBankFilterDiscipline = e.target.value;
+            this.currentBankIndex = 0;
+            this.renderBankQuestion();
+            this.renderBankStats();
+          });
+
+          safeAddListener('btn-toggle-bank-stats', 'click', () => {
+            const panel = document.getElementById('bank-stats-panel');
+            if (panel) {
+              const isClosed = panel.style.display === 'none' || !panel.style.display;
+              panel.style.display = isClosed ? 'block' : 'none';
+              if (isClosed) this.renderBankStats();
+            }
+          });
+
+          safeAddListener('btn-close-bank-stats', 'click', () => {
+            const panel = document.getElementById('bank-stats-panel');
+            if (panel) panel.style.display = 'none';
+          });
+
+          // Delegação para o cartão ativo do Banco de Questões
+          const bankCardBox = document.getElementById('bank-practice-card-container');
+          if (bankCardBox) {
+            bankCardBox.addEventListener('click', (e) => {
+              const target = e.target.closest('[data-action]');
+              if (!target) return;
+              const action = target.getAttribute('data-action');
+              const qid = target.getAttribute('data-qid');
+              if (action === 'answer-bank' && qid) {
+                const choice = target.getAttribute('data-choice');
+                if (choice) this.submitBankAnswer(qid, choice);
+              }
+              if (action === 'next-bank-question') {
+                this.nextBankQuestion();
+              }
+            });
+          }
+
+          // Ações do fluxo complementar de IA (Adapta ONE)
           safeAddListener('btn-ai-auto-target', 'click', () => this.selectPrioritySubjectForAi());
           safeAddListener('btn-generate-ai-prompt', 'click', () => this.generateAiPrompt());
           safeAddListener('btn-copy-ai-prompt', 'click', () => this.copyAiPrompt());
@@ -3207,9 +3959,9 @@ Tópico: Recursos Cíveis"></textarea>
           safeAddListener('btn-clear-pending-ai', 'click', () => this.clearPendingAiQuestions());
           safeAddListener('ai-filter-subject', 'change', () => this.renderAiExercises());
 
-          const container = document.getElementById('ai-practice-container');
-          if (container) {
-            container.addEventListener('click', (e) => {
+          const aiContainer = document.getElementById('ai-practice-container');
+          if (aiContainer) {
+            aiContainer.addEventListener('click', (e) => {
               const target = e.target.closest('[data-action]');
               if (!target) return;
               const action = target.getAttribute('data-action');
@@ -3220,15 +3972,327 @@ Tópico: Recursos Cíveis"></textarea>
                 const choice = target.getAttribute('data-choice');
                 if (choice) this.submitAiAnswer(qid, choice);
               }
+              if (action === 'next-ai-question') {
+                this.renderAiExercises();
+              }
               if (action === 'focus-import') {
                 const raw = document.getElementById('ai-import-raw');
                 if (raw) raw.focus();
               }
             });
           }
+
+          // Preenche dropdowns de disciplinas do banco e renderiza questão inicial
+          this.populateBankDisciplinesDropdown();
+          this.renderBankQuestion();
         } catch (err) {
-          console.error('[MODULO EXERCÍCIOS IA]:', err);
+          console.error('[MODULO EXERCÍCIOS]:', err);
         }
+      }
+
+      switchExercisesSubtab(subtab) {
+        const btnBank = document.getElementById('subtab-btn-bank');
+        const btnAi = document.getElementById('subtab-btn-ai');
+        const viewBank = document.getElementById('exercises-bank-view');
+        const viewAi = document.getElementById('exercises-ai-view');
+
+        if (subtab === 'bank') {
+          btnBank.className = 'btn btn-sm btn-primary';
+          btnAi.className = 'btn btn-sm';
+          if (viewBank) viewBank.style.display = 'block';
+          if (viewAi) viewAi.style.display = 'none';
+          this.renderBankQuestion();
+        } else {
+          btnBank.className = 'btn btn-sm';
+          btnAi.className = 'btn btn-sm btn-primary';
+          if (viewBank) viewBank.style.display = 'none';
+          if (viewAi) viewAi.style.display = 'block';
+          this.renderAiExercises();
+        }
+      }
+
+      populateBankDisciplinesDropdown() {
+        const discSelect = document.getElementById('bank-filter-discipline');
+        if (!discSelect) return;
+
+        const currentVal = discSelect.value || 'all';
+        discSelect.innerHTML = '<option value="all">Todas as disciplinas (Intercalamento geral)</option>';
+
+        let filtered = UNESC_QUESTION_BANK;
+        if (this.currentBankFilterCategory && this.currentBankFilterCategory !== 'all') {
+          filtered = filtered.filter(q => q.category === this.currentBankFilterCategory);
+        }
+
+        const uniqueDisciplines = Array.from(new Set(filtered.map(q => q.discipline))).sort();
+        uniqueDisciplines.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d;
+          opt.textContent = d;
+          discSelect.appendChild(opt);
+        });
+
+        if (uniqueDisciplines.includes(currentVal)) {
+          discSelect.value = currentVal;
+        } else {
+          discSelect.value = 'all';
+          this.currentBankFilterDiscipline = 'all';
+        }
+      }
+
+      getFilteredBankQuestions() {
+        let list = UNESC_QUESTION_BANK;
+        if (this.currentBankFilterCategory && this.currentBankFilterCategory !== 'all') {
+          list = list.filter(q => q.category === this.currentBankFilterCategory);
+        }
+        if (this.currentBankFilterDiscipline && this.currentBankFilterDiscipline !== 'all') {
+          list = list.filter(q => q.discipline === this.currentBankFilterDiscipline);
+        }
+        return list;
+      }
+
+      renderBankQuestion() {
+        const container = document.getElementById('bank-practice-card-container');
+        if (!container) return;
+
+        const list = this.getFilteredBankQuestions();
+        if (list.length === 0) {
+          container.innerHTML = `
+            <div class="panel" style="text-align: center; padding: 2rem 1rem;">
+              <p class="muted">Nenhuma questão encontrada para os filtros selecionados.</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (this.currentBankIndex >= list.length) {
+          this.currentBankIndex = 0;
+        }
+
+        const q = list[this.currentBankIndex];
+        const stats = this.getDisciplineStats(q.discipline);
+
+        container.innerHTML = `
+          <div class="panel" id="bank-active-card-${q.id}" style="border: 2px solid var(--border); border-radius: var(--radius); padding: 1.5rem; transition: border-color 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <div>
+                <span class="badge" style="background: rgba(79, 70, 229, 0.12); color: var(--accent-text); font-weight: 700; font-size: 0.8rem; margin-right: 0.5rem;">
+                  ${q.category}
+                </span>
+                <strong style="font-size: 0.95rem; color: var(--text);">${q.discipline}</strong>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span class="muted" style="font-size: 0.8rem; font-weight: 600;">Questão ${this.currentBankIndex + 1} de ${list.length}</span>
+                <span class="status-pill ${stats.pillClass}" style="font-size: 0.72rem;">${stats.displayTaxa}</span>
+              </div>
+            </div>
+
+            <div style="background: var(--bg); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 1.15rem; margin-bottom: 1.15rem;">
+              <p style="margin: 0; font-size: 1.05rem; line-height: 1.55; color: var(--text); font-weight: 500;">
+                "${q.statement}"
+              </p>
+            </div>
+
+            <!-- Confiança prévia (metacognição TDAH) -->
+            <div class="confidence-checkbox-wrap" style="margin-bottom: 1.15rem;">
+              <input type="checkbox" id="bank-conf-check-${q.id}" style="cursor: pointer;">
+              <label for="bank-conf-check-${q.id}" style="cursor: pointer; user-select: none;">
+                <strong>Tenho alta certeza nesta resposta</strong> (se errar, vai direto para revisão espaçada com hipercorreção)
+              </label>
+            </div>
+
+            <!-- Botões de Resposta Inline -->
+            <div id="bank-buttons-row-${q.id}" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button type="button" class="btn" data-action="answer-bank" data-qid="${q.id}" data-choice="CERTO" style="flex: 1; min-width: 140px; padding: 0.75rem; font-size: 1rem; font-weight: 700; border-color: #10b981; color: #047857; background: #ecfdf5;">
+                ✓ CERTO
+              </button>
+              <button type="button" class="btn" data-action="answer-bank" data-qid="${q.id}" data-choice="ERRADO" style="flex: 1; min-width: 140px; padding: 0.75rem; font-size: 1rem; font-weight: 700; border-color: #ef4444; color: #b91c1c; background: #fef2f2;">
+                ✕ ERRADO
+              </button>
+            </div>
+
+            <!-- Área de Feedback Inline Discreto (sem modal bloqueante) -->
+            <div id="bank-feedback-box-${q.id}" style="display: none; margin-top: 1.25rem; padding: 1rem; border-radius: var(--radius); font-size: 0.9rem; line-height: 1.5;">
+            </div>
+          </div>
+        `;
+      }
+
+      submitBankAnswer(qId, choice) {
+        const q = UNESC_QUESTION_BANK.find(item => item.id === qId);
+        if (!q) return;
+
+        const isCorrect = (choice === q.correct);
+        const confCheck = document.getElementById(`bank-conf-check-${qId}`);
+        const hadHighConfidence = confCheck ? confCheck.checked : false;
+
+        // 1. Grava no histórico acumulado por disciplina
+        if (!this.data.bankStats) this.data.bankStats = {};
+        if (!this.data.bankStats[q.discipline]) {
+          this.data.bankStats[q.discipline] = { answered: 0, correct: 0 };
+        }
+        this.data.bankStats[q.discipline].answered += 1;
+        if (isCorrect) {
+          this.data.bankStats[q.discipline].correct += 1;
+        }
+
+        // 2. Garante existência de matéria correspondente para vincular aos relatórios
+        let subject = (this.data.subjects || []).find(s => s.name.trim().toLowerCase() === q.discipline.trim().toLowerCase());
+        if (!subject) {
+          subject = {
+            id: 'sub-bank-' + Math.random().toString(36).substr(2, 6),
+            name: q.discipline,
+            professor: 'Grade UNESC',
+            color: '#4f46e5'
+          };
+          this.data.subjects.push(subject);
+        }
+
+        // 3. Registra sessão de estudo para a regra dos 85%
+        this.data.sessions.unshift({
+          id: 'sess-bank-' + Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          subjectId: subject.id,
+          technique: 'Recuperação ativa (Banco UNESC)',
+          total: 1,
+          correct: isCorrect ? 1 : 0,
+          jol: hadHighConfidence ? 95 : 55,
+          notes: `Item C/E: ${q.discipline} (${q.legalRef})`
+        });
+
+        // 4. Integração com Caderno de Erros e Revisão Espaçada se errar
+        if (!isCorrect) {
+          const errorType = hadHighConfidence ? 'Jurava que sabia' : 'Sabia que não sabia';
+          const errReason = `Gabarito oficial é ${q.correct}. Fundamento: ${q.explanation} (${q.legalRef})`;
+
+          this.data.errors.unshift({
+            id: 'err-bank-' + Date.now(),
+            date: new Date().toISOString().split('T')[0],
+            subjectId: subject.id,
+            topic: `${q.discipline}: "${q.statement.substring(0, 75)}..."`,
+            type: errorType,
+            reason: errReason,
+            isCard: hadHighConfidence
+          });
+
+          if (hadHighConfidence) {
+            this.data.reviews.unshift({
+              id: 'rev-bank-' + Date.now(),
+              subjectId: subject.id,
+              title: `[UNESC] ${q.discipline}: Certo ou Errado?`,
+              answer: `Gabarito: ${q.correct}. ${q.explanation} (${q.legalRef})`,
+              stage: 0,
+              intervalDays: FSRS_INTERVALS[0],
+              nextReview: new Date().toISOString().split('T')[0],
+              origin: 'Banco UNESC (Jurava que sabia)'
+            });
+          }
+        }
+
+        this.saveData();
+
+        // 5. FEEDBACK INLINE DISCRETO (SEM MODAL NEM POPUPS)
+        const buttonsRow = document.getElementById(`bank-buttons-row-${qId}`);
+        const feedbackBox = document.getElementById(`bank-feedback-box-${qId}`);
+        const card = document.getElementById(`bank-active-card-${qId}`);
+
+        if (buttonsRow) {
+          buttonsRow.querySelectorAll('button').forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+          });
+        }
+
+        if (card) {
+          card.style.borderColor = isCorrect ? '#22c55e' : '#ef4444';
+        }
+
+        if (feedbackBox) {
+          feedbackBox.style.display = 'block';
+          feedbackBox.style.background = isCorrect ? '#f0fdf4' : '#fef2f2';
+          feedbackBox.style.border = `1px solid ${isCorrect ? '#86efac' : '#fca5a5'}`;
+
+          const resultTitle = isCorrect
+            ? `<span style="color:#15803d; font-weight:700; font-size:1.05rem;">✅ Correto! Gabarito: ${q.correct}</span>`
+            : `<span style="color:#991b1b; font-weight:700; font-size:1.05rem;">❌ Incorreto. Gabarito: ${q.correct}</span>`;
+
+          feedbackBox.innerHTML = `
+            <div style="margin-bottom: 0.5rem;">${resultTitle}</div>
+            <p style="margin: 0 0 0.5rem 0; color: var(--text);">
+              <strong>Explicação:</strong> ${q.explanation}
+            </p>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+              <strong>Fundamento legal:</strong> ${q.legalRef}
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button type="button" class="btn btn-primary" data-action="next-bank-question" style="font-weight: 600; padding: 0.5rem 1.25rem;">
+                Próxima questão →
+              </button>
+            </div>
+          `;
+        }
+
+        // Micro-feedback no toast e atualização de contadores
+        this.recordDailyCompletion('question', 1);
+        if (isCorrect) {
+          this.toast('Item correto!');
+        } else if (hadHighConfidence) {
+          this.toast('Ponto anotado no Caderno de erros e agendado para revisão.');
+        } else {
+          this.toast('Ponto registrado no Caderno de erros.');
+        }
+      }
+
+      nextBankQuestion() {
+        const list = this.getFilteredBankQuestions();
+        this.currentBankIndex = (this.currentBankIndex + 1) % (list.length || 1);
+        this.renderBankQuestion();
+        this.renderDashboard();
+      }
+
+      getDisciplineStats(disciplineName) {
+        const s = (this.data.bankStats && this.data.bankStats[disciplineName]) || { answered: 0, correct: 0 };
+        if (!s.answered) {
+          return { displayTaxa: '—', rate: null, pillClass: '' };
+        }
+        const pct = Math.round((s.correct / s.answered) * 100);
+        let pillClass = 'status-ideal';
+        if (pct < 70) pillClass = 'status-hard';
+        else if (pct > 95) pillClass = 'status-easy';
+
+        return { displayTaxa: `${pct}% (${s.correct}/${s.answered})`, rate: pct, pillClass };
+      }
+
+      renderBankStats() {
+        const grid = document.getElementById('bank-stats-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        const disciplines = Array.from(new Set(UNESC_QUESTION_BANK.map(q => q.discipline))).sort();
+        let belowCount = 0;
+
+        disciplines.forEach(d => {
+          const stats = this.getDisciplineStats(d);
+          const isWarning = stats.rate !== null && stats.rate < 70;
+          if (isWarning) belowCount++;
+
+          const div = document.createElement('div');
+          div.style.padding = '0.4rem 0.6rem';
+          div.style.borderRadius = 'var(--radius)';
+          div.style.background = isWarning ? '#fee2e2' : 'var(--surface)';
+          div.style.border = `1px solid ${isWarning ? '#fca5a5' : 'var(--border)'}`;
+          div.style.display = 'flex';
+          div.style.justifyContent = 'space-between';
+          div.style.alignItems = 'center';
+          div.style.fontSize = '0.8rem';
+
+          div.innerHTML = `
+            <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 0.5rem; ${isWarning ? 'color:#991b1b; font-weight:700;' : ''}">${d}</span>
+            <span class="status-pill ${stats.pillClass}" style="font-size: 0.72rem; padding: 1px 6px;">
+              ${stats.displayTaxa} ${isWarning ? '⚠️' : ''}
+            </span>
+          `;
+          grid.appendChild(div);
+        });
       }
 
       initErrorsModule() {
@@ -3542,15 +4606,23 @@ Tópico: Recursos Cíveis"></textarea>
           timeEl.innerText = `~${Math.max(5, dueReviews.length * 2)} min`;
           criteriaEl.innerText = `Passar pelas cartas agendadas para hoje`;
           resumeBox.style.display = 'none';
-        } else {
+        } else if (this.data.subjects && this.data.subjects.length > 0) {
           // Sem revisões: sugere próxima prática ou matéria com maior necessidade
           const firstSub = this.data.subjects[0];
           statusText.innerText = 'não iniciada';
           primaryBtn.innerText = 'Começar sessão';
-          heading.innerText = `Praticar evocação ativa em ${firstSub ? firstSub.name : 'sua disciplina'}`;
-          subEl.innerText = firstSub ? firstSub.name : 'Geral';
+          heading.innerText = `Praticar evocação ativa em ${firstSub.name}`;
+          subEl.innerText = firstSub.name;
           timeEl.innerText = '~15 min';
           criteriaEl.innerText = 'Resolver 5 questões de auto-teste';
+          resumeBox.style.display = 'none';
+        } else {
+          statusText.innerText = 'não iniciada';
+          primaryBtn.innerText = 'Cadastrar primeira matéria';
+          heading.innerText = 'Cadastre sua primeira disciplina';
+          subEl.innerText = '—';
+          timeEl.innerText = '—';
+          criteriaEl.innerText = 'Cadastrar ao menos uma matéria';
           resumeBox.style.display = 'none';
         }
 
@@ -3612,6 +4684,11 @@ Tópico: Recursos Cíveis"></textarea>
         } else {
           const todayStr = new Date().toISOString().split('T')[0];
           const dueReviews = this.data.reviews.filter(r => r.nextReview <= todayStr);
+          if (this.data.subjects.length === 0) {
+            this.switchTab('tab-subjects');
+            this.openModal('modal-subject');
+            return;
+          }
           if (dueReviews.length > 0) {
             this.switchTab('tab-reviews');
             if (this.prefs.autoFocus) this.toggleFocusMode(true, 'Revisão Espaçada');
@@ -3646,21 +4723,11 @@ Tópico: Recursos Cíveis"></textarea>
 
         this.saveData();
         this.updateDailyClosureDisplay();
-
-        // Oferece lembrete sem interromper sessão (ao concluir)
-        const modal = document.getElementById('modal-completion-reminder');
-        const sumText = document.getElementById('completion-summary-text');
-        if (sumText) {
-          sumText.innerText = `Hoje: ${this.data.dailyLog.reviews} revisões, ${this.data.dailyLog.studyMinutes} min de estudo, ${this.data.dailyLog.questions} questões feitas.`;
-        }
-        if (modal && !document.body.classList.contains('focus-mode-active')) {
-          modal.classList.add('open');
-        }
+        // NENHUM modal ou popup interruptivo é exibido ao concluir resposta ou etapa
       }
 
       confirmCompletionReminder() {
-        this.closeModal('modal-completion-reminder');
-        this.toast('Lembrete agendado para amanhã no horário configurado!');
+        // Função preservada sem efeito colateral de modal
       }
 
       checkOptInReminders() {
@@ -4020,6 +5087,30 @@ Tópico: Recursos Cíveis"></textarea>
       renderDashboard() {
         const todayStr = new Date().toISOString().split('T')[0];
         
+        // 1. Verifica se o app está completamente limpo/vazio para o novo usuário
+        const isAppEmpty = (!this.data.subjects || this.data.subjects.length === 0) &&
+                           (!this.data.captureHistory || this.data.captureHistory.length === 0) &&
+                           (!this.data.ideas || this.data.ideas.length === 0);
+
+        const welcomeView = document.getElementById('dashboard-welcome-view');
+        const activeContent = document.getElementById('dashboard-active-content');
+
+        if (welcomeView && activeContent) {
+          if (isAppEmpty) {
+            welcomeView.style.display = 'block';
+            activeContent.style.display = 'none';
+            // Atualiza contadores discretos da navegação
+            const navCountEmpty = document.getElementById('nav-review-count');
+            if (navCountEmpty) navCountEmpty.innerText = '0';
+            const inlineCountEmpty = document.getElementById('btn-count-inline');
+            if (inlineCountEmpty) inlineCountEmpty.innerText = '0';
+            return;
+          } else {
+            welcomeView.style.display = 'none';
+            activeContent.style.display = 'block';
+          }
+        }
+
         // Atualiza cartão dominante Próximo Passo e Fechamento do dia
         this.renderNextStepCard();
         this.updateDailyClosureDisplay();
@@ -4029,7 +5120,11 @@ Tópico: Recursos Cíveis"></textarea>
         const todayKpi = document.getElementById('kpi-today-reviews');
         if (todayKpi) todayKpi.innerText = `${todayReviews.length}`;
         const todaySub = document.getElementById('kpi-today-reviews-sub');
-        if (todaySub) todaySub.innerText = `${todayReviews.length} carta(s) prontas`;
+        if (todaySub) {
+          todaySub.innerText = todayReviews.length > 0 
+            ? `${todayReviews.length} carta(s) prontas` 
+            : 'Nenhuma revisão pendente';
+        }
 
         const calmReviews = document.getElementById('calm-reviews-text');
         if (calmReviews) {
@@ -4046,7 +5141,7 @@ Tópico: Recursos Cíveis"></textarea>
         // Próxima sessão do cronograma
         const now = new Date();
         const currentDay = String(now.getDay()); // 0 = dom, 1 = seg...
-        const nextInDay = this.data.schedule
+        const nextInDay = (this.data.schedule || [])
           .filter(b => b.day === currentDay)
           .sort((a,b) => a.time.localeCompare(b.time))[0];
         
@@ -4056,19 +5151,19 @@ Tópico: Recursos Cíveis"></textarea>
           const sub = nextInDay.subjectId === '__SET_MISTO__' 
             ? { name: '🔀 Set Misto' } 
             : (this.data.subjects.find(s => s.id === nextInDay.subjectId) || { name: 'Matéria' });
-          kpiNext.innerText = sub.name;
-          kpiNextTime.innerText = `Hoje às ${nextInDay.time} (${nextInDay.duration} min)`;
+          if (kpiNext) kpiNext.innerText = sub.name;
+          if (kpiNextTime) kpiNextTime.innerText = `Hoje às ${nextInDay.time} (${nextInDay.duration} min)`;
         } else {
           // Busca próximo dia da semana com bloco
-          const anySchedule = this.data.schedule[0];
+          const anySchedule = (this.data.schedule || [])[0];
           if (anySchedule) {
             const daysNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
             const sub = anySchedule.subjectId === '__SET_MISTO__' ? { name: '🔀 Set Misto' } : (this.data.subjects.find(s => s.id === anySchedule.subjectId) || { name: 'Estudo' });
-            kpiNext.innerText = sub.name;
-            kpiNextTime.innerText = `${daysNames[anySchedule.day]} às ${anySchedule.time}`;
+            if (kpiNext) kpiNext.innerText = sub.name;
+            if (kpiNextTime) kpiNextTime.innerText = `${daysNames[anySchedule.day]} às ${anySchedule.time}`;
           } else {
-            kpiNext.innerText = 'Sem blocos';
-            kpiNextTime.innerText = 'Cadastre na aba Cronograma';
+            if (kpiNext) kpiNext.innerText = '—';
+            if (kpiNextTime) kpiNextTime.innerText = 'Nenhum bloco agendado';
           }
         }
 
@@ -4078,7 +5173,7 @@ Tópico: Recursos Cíveis"></textarea>
         let allQuestions = 0;
         let allCorrect = 0;
 
-        this.data.subjects.forEach(sub => {
+        (this.data.subjects || []).forEach(sub => {
           const stats = this.getSubjectStats(sub.id);
           if (stats.count > 0) {
             totalAssessed++;
@@ -4086,15 +5181,26 @@ Tópico: Recursos Cíveis"></textarea>
           }
         });
 
-        this.data.sessions.forEach(s => {
+        (this.data.sessions || []).forEach(s => {
           allQuestions += Number(s.total);
           allCorrect += Number(s.correct);
         });
 
-        document.getElementById('kpi-zone-ratio').innerText = `${inIdealCount} / ${totalAssessed}`;
-        const overallAcc = allQuestions > 0 ? Math.round((allCorrect / allQuestions) * 100) : 0;
-        document.getElementById('kpi-accuracy-overall').innerText = `${overallAcc}%`;
-        document.getElementById('kpi-sessions-total').innerText = `${this.data.sessions.length} sessões registradas`;
+        const kpiZone = document.getElementById('kpi-zone-ratio');
+        if (kpiZone) {
+          kpiZone.innerText = totalAssessed > 0 ? `${inIdealCount} / ${totalAssessed}` : '—';
+        }
+        const kpiAcc = document.getElementById('kpi-accuracy-overall');
+        if (kpiAcc) {
+          const overallAcc = allQuestions > 0 ? Math.round((allCorrect / allQuestions) * 100) : null;
+          kpiAcc.innerText = overallAcc !== null ? `${overallAcc}%` : '—';
+        }
+        const kpiSessTotal = document.getElementById('kpi-sessions-total');
+        if (kpiSessTotal) {
+          kpiSessTotal.innerText = this.data.sessions.length > 0 
+            ? `${this.data.sessions.length} sessões registradas` 
+            : 'Nenhuma sessão registrada';
+        }
 
         // Render lista de matérias no dashboard
         const listEl = document.getElementById('dashboard-subjects-list');
@@ -4203,7 +5309,7 @@ Tópico: Recursos Cíveis"></textarea>
             <div class="panel" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem;">
               <h3 style="margin:0 0 0.5rem 0;">Nenhuma matéria cadastrada</h3>
               <p class="muted" style="margin:0 0 1rem 0;">Adicione as disciplinas do semestre para aplicar as técnicas cognitivas.</p>
-              <button class="btn btn-primary" id="btn-first-subject" type="button">+ Cadastrar Primeira Matéria</button>
+              <button class="btn btn-primary" id="btn-first-subject" type="button" onclick="app.openModal('modal-subject')">+ Cadastrar Primeira Matéria</button>
             </div>
           `;
           return;
@@ -4232,7 +5338,7 @@ Tópico: Recursos Cíveis"></textarea>
               <div class="shell-grid" style="grid-template-columns: 1fr 1fr; gap:0.5rem; margin-bottom:1rem; font-size:0.85rem;">
                 <div style="background:var(--bg); padding:0.5rem; border-radius:var(--radius);">
                   <div class="muted" style="font-size:0.75rem;">Taxa de Acerto</div>
-                  <strong style="font-size:1.1rem;">${stats.accuracy !== null ? stats.accuracy + '%' : '-'}</strong>
+                  <strong style="font-size:1.1rem;">${stats.accuracy !== null ? stats.accuracy + '%' : '—'}</strong>
                 </div>
                 <div style="background:var(--bg); padding:0.5rem; border-radius:var(--radius);">
                   <div class="muted" style="font-size:0.75rem;">Sessões Realizadas</div>
@@ -4243,12 +5349,12 @@ Tópico: Recursos Cíveis"></textarea>
               <div style="font-size:0.825rem; background:rgba(0,0,0,0.02); padding:0.6rem; border-radius:var(--radius); margin-bottom:1rem;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
                   <span class="muted">Confiança Média (JOL):</span>
-                  <strong>${stats.avgJol > 0 ? stats.avgJol + '%' : '-'}</strong>
+                  <strong>${stats.avgJol > 0 ? stats.avgJol + '%' : '—'}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between;">
                   <span class="muted">Gap de Calibração:</span>
                   <span class="${stats.gap > 5 ? 'gap-overconfidence' : 'gap-calibrated'}">
-                    ${stats.count > 0 ? (stats.gap > 0 ? `+${stats.gap}% (Superestimando)` : `${stats.gap}% (Bem calibrado)`) : '-'}
+                    ${stats.count > 0 ? (stats.gap > 0 ? `+${stats.gap}% (Superestimando)` : `${stats.gap}% (Bem calibrado)`) : '—'}
                   </span>
                 </div>
               </div>
@@ -4600,7 +5706,7 @@ Tópico: Recursos Cíveis"></textarea>
           box.innerHTML = `
             <div class="panel" style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1rem;">
               <p class="muted" style="margin:0 0 0.5rem 0;">Nenhum erro registrado com este filtro.</p>
-              <button class="btn btn-primary btn-sm" id="btn-empty-error" type="button">+ Registrar Erro</button>
+              <button class="btn btn-primary btn-sm" id="btn-empty-error" type="button" onclick="app.openModal('modal-error')">+ Registrar Erro</button>
             </div>
           `;
           return;
@@ -5362,13 +6468,12 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
 
         this.saveData();
 
-        // Feedback visual imediato no card
+        // Feedback visual imediato no card com botão "Próxima questão"
         const card = document.getElementById(`ai-card-${qId}`);
         const feedbackBox = document.getElementById(`ai-feedback-${qId}`);
 
         if (card) {
           card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
-          // Desativa botões de alternativa
           card.querySelectorAll('.alt-btn').forEach(btn => {
             btn.disabled = true;
             const optLetter = btn.getAttribute('data-opt');
@@ -5384,44 +6489,44 @@ Comece imediatamente pelo primeiro bloco "Enunciado:".`;
           feedbackBox.style.display = 'block';
           if (isCorrect) {
             feedbackBox.innerHTML = `
-              <div style="color: #166534; font-weight: 600; margin-bottom: 4px;">✅ Resposta Correta!</div>
+              <div style="color: #166534; font-weight: 700; margin-bottom: 4px;">✅ Resposta Correta!</div>
               <p style="margin: 0 0 0.5rem 0; color: var(--text);">${q.explanation}</p>
-              <span class="status-pill status-ideal" style="font-size: 0.72rem;">Sessão registrada na Regra dos 85%</span>
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-top:0.75rem;">
+                <span class="status-pill status-ideal" style="font-size: 0.72rem;">Registrada na Regra dos 85%</span>
+                <button type="button" class="btn btn-sm btn-primary" data-action="next-ai-question">Próxima questão →</button>
+              </div>
             `;
           } else {
             feedbackBox.innerHTML = `
-              <div style="color: #991b1b; font-weight: 600; margin-bottom: 4px;">
-                ❌ Resposta Incorreta (Correta: <strong>${q.correctAnswer}</strong>)
+              <div style="color: #991b1b; font-weight: 700; margin-bottom: 4px;">
+                ❌ Incorreto. Resposta correta: <strong>${q.correctAnswer}</strong>
               </div>
               <p style="margin: 0 0 0.5rem 0; color: var(--text);">${q.explanation}</p>
-              <div class="flex gap-1 flex-wrap">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-top:0.75rem;">
                 <span class="status-pill status-hard" style="font-size: 0.72rem;">
-                  Adicionado ao Error Log (${hadHighConfidence ? '🚨 Jurava que sabia' : 'Sabia que não sabia'})
+                  Adicionado ao Caderno de erros
                 </span>
-                ${hadHighConfidence ? '<span class="status-pill status-ideal" style="font-size: 0.72rem;">⚡ Inserido na Fila de Revisões de Hoje (FSRS)</span>' : ''}
+                <button type="button" class="btn btn-sm btn-primary" data-action="next-ai-question">Próxima questão →</button>
               </div>
             `;
           }
         }
 
-        // Dispara toasts informativos objetivos e registra fechamento de ciclo
+        // Dispara toasts informativos objetivos sem modal bloqueante
         this.recordDailyCompletion('question', 1);
 
         if (isCorrect) {
-          this.toast('Questão correta! Progresso registrado.');
+          this.toast('Questão correta!');
         } else if (hadHighConfidence) {
-          this.toast('Registrado no Caderno de erros e agendado para revisar.');
+          this.toast('Ponto salvo no Caderno de erros e agendado para revisar.');
         } else {
-          this.toast('Questão respondida. Ponto registrado no Caderno de erros.');
+          this.toast('Ponto anotado no Caderno de erros.');
         }
 
-        // Atualiza Dashboard e contadores após pequeno delay suave
-        setTimeout(() => {
-          this.renderDashboard();
-          this.renderErrors();
-          this.renderReviews();
-          this.renderAiExercises();
-        }, 1200);
+        // Atualiza contadores
+        this.renderDashboard();
+        this.renderErrors();
+        this.renderReviews();
       }
 
       deleteAiQuestion(qId) {
